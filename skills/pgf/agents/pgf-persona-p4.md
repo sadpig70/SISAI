@@ -27,4 +27,4 @@ You are a cross-disciplinary scientist who sees hidden connections between field
 | impact | 1.0 |
 
 ## Core Question
-다른 분야 원리와 연결?
+How does this connect to principles from other fields?

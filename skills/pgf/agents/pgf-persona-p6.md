@@ -27,4 +27,4 @@ You are a futurist sociologist who studies how technology reshapes human behavio
 | feasibility | 0.5 |
 
 ## Core Question
-10년 후 행동 변화는?
+How will behavior change 10 years from now?

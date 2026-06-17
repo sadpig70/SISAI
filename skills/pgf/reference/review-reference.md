@@ -1,7 +1,7 @@
 # Review Mode — Iterative Review & Improvement Specification
 
-> 기존 산출물(문서, 설계, 스킬, 코드)을 면밀히 검토하여 수정/개선/추가를 반복한다.
-> `design --analyze`(코드→DESIGN 역공학)와 다름: review는 **이미 존재하는 산출물의 품질을 올리는** 모드.
+> Closely review existing artifacts (documents, designs, skills, code) and iterate on fixes/improvements/additions.
+> Different from `design --analyze` (code→DESIGN reverse engineering): review is the mode that **raises the quality of artifacts that already exist**.
 
 ---
 
@@ -9,19 +9,19 @@
 
 ### Purpose
 
-- 기존 산출물의 불일치, 누락, 모호, 개선점을 체계적으로 도출
-- 발견된 이슈를 우선순위화하여 수정·검증
-- 이슈가 소진될 때까지 반복 (Convergence Loop)
+- Systematically surface inconsistencies, omissions, ambiguities, and improvement points in existing artifacts
+- Prioritize, fix, and verify the discovered issues
+- Iterate until issues are exhausted (Convergence Loop)
 
 ### When to Use
 
 | Situation | Example |
 |-----------|---------|
-| 문서 품질 개선 | PG/PGF 스킬 문서 검토 |
-| 설계 검증 | DESIGN.md 내부 일관성 확인 |
-| 스킬 강화 | 기존 스킬의 누락 기능 보완 |
-| 코드 리뷰 | 구현 코드의 품질/보안/성능 검토 |
-| 교차 검증 | 여러 문서 간 일관성 확인 |
+| Improve document quality | Review PG/PGF skill documents |
+| Verify a design | Check internal consistency of DESIGN.md |
+| Strengthen a skill | Supplement missing features in an existing skill |
+| Code review | Review the quality/security/performance of implementation code |
+| Cross-verification | Check consistency across multiple documents |
 
 ---
 
@@ -29,9 +29,9 @@
 
 | Command | Action |
 |---------|--------|
-| `/PGF review {target}` | 대상 파일/디렉토리 면밀 검토 |
-| `/PGF review {target} --scope {files}` | 특정 파일 범위만 검토 |
-| `/PGF review {target} --max-cycles N` | 최대 N회 반복 (기본: 이슈 소진까지) |
+| `/PGF review {target}` | Closely review the target file/directory |
+| `/PGF review {target} --scope {files}` | Review only a specific file scope |
+| `/PGF review {target} --max-cycles N` | Iterate up to N times (default: until issues are exhausted) |
 
 ---
 
@@ -43,7 +43,7 @@ def review_cycle(
     scope: list[str] = None,
     max_cycles: int = 10,
 ) -> ReviewResult:
-    """면밀 검토 → 수정 → 재검증 반복"""
+    """close review → fix → re-verify, iterated"""
 
     cycle = 0
     all_fixes = []
@@ -51,26 +51,26 @@ def review_cycle(
     while cycle < max_cycles:
         cycle += 1
 
-        # Phase 1: ANALYZE — 다각도 분석
+        # Phase 1: ANALYZE — multi-angle analysis
         issues = analyze(target, scope)
 
         if not issues:
-            break  # 이슈 소진 → 완료
+            break  # issues exhausted → complete
 
-        # Phase 2: PRIORITIZE — 우선순위 결정
+        # Phase 2: PRIORITIZE — determine priority
         prioritized = prioritize_issues(issues)
 
-        # Phase 3: IMPLEMENT — 수정 구현
+        # Phase 3: IMPLEMENT — implement fixes
         fixes = implement_fixes(prioritized)
         all_fixes.extend(fixes)
 
-        # Phase 4: VERIFY — 수정 검증
+        # Phase 4: VERIFY — verify fixes
         remaining = verify_fixes(target, fixes)
 
         report_cycle(cycle, len(issues), len(fixes), len(remaining))
 
         if not remaining:
-            break  # 모든 이슈 해결
+            break  # all issues resolved
 
     return ReviewResult(
         cycles=cycle,
@@ -85,26 +85,26 @@ def review_cycle(
 
 ```python
 def analyze(target: str, scope: list[str]) -> list[Issue]:
-    """5축 분석"""
+    """5-axis analysis"""
     content = read_all(target, scope)
 
     [parallel]
         consistency = AI_check_internal_consistency(content)
-        # 같은 문서 안에서 모순되는 설명
+        # explanations that contradict each other within the same document
 
         completeness = AI_check_completeness(content)
-        # 핵심 개념이 누락 없이 정의되었는가
+        # are core concepts defined without omission
 
         clarity = AI_check_clarity(content)
-        # 모호한 표현, 해석이 갈릴 수 있는 부분
+        # ambiguous expressions, parts open to differing interpretation
 
         accuracy = AI_check_accuracy(content)
-        # 예시가 설명과 일치하는가, 참조가 유효한가
+        # do examples match the explanations, are references valid
 
         improvements = AI_identify_improvements(content)
-        # 더 나은 표현, 추가할 개념, 구조 개선
+        # better wording, concepts to add, structural improvements
 
-    # 다중 파일 대상 시 교차 일관성 추가
+    # add cross-consistency when targeting multiple files
     if len(scope or [target]) > 1:
         cross = AI_check_cross_consistency(content)
         return merge_deduplicate(consistency, completeness, clarity, accuracy, improvements, cross)
@@ -116,12 +116,12 @@ def analyze(target: str, scope: list[str]) -> list[Issue]:
 
 ```python
 Issue = {
-    "id": str,           # P1, F2, C3 등
-    "location": str,     # 파일:섹션 또는 파일:라인
+    "id": str,           # e.g. P1, F2, C3
+    "location": str,     # file:section or file:line
     "type": str,         # "fix" | "improve" | "add"
     "impact": str,       # "high" | "medium" | "low"
-    "description": str,  # 이슈 설명
-    "suggestion": str,   # 제안된 수정
+    "description": str,  # issue description
+    "suggestion": str,   # proposed fix
 }
 ```
 
@@ -131,7 +131,7 @@ Issue = {
 
 ```python
 def prioritize_issues(issues: list[Issue]) -> list[Issue]:
-    """impact × type 기준 정렬"""
+    """sort by impact × type"""
     priority_order = {
         ("high", "fix"): 1,
         ("high", "improve"): 2,
@@ -173,6 +173,6 @@ def prioritize_issues(issues: list[Issue]) -> list[Issue]:
 
 | Mode | Relationship |
 |------|-------------|
-| `design --analyze` | 코드→DESIGN 역공학. review는 기존 산출물 품질 개선 |
-| `verify` | 구현 후 검증. review는 구현 전/후 불문 산출물 검토 |
-| `design-review` (3관점) | DESIGN→PLAN 전환 전 사전 검증. review는 범용 반복 검토 |
+| `design --analyze` | code→DESIGN reverse engineering. review improves the quality of existing artifacts |
+| `verify` | post-implementation verification. review reviews artifacts regardless of before/after implementation |
+| `design-review` (3-perspective) | pre-verification before the DESIGN→PLAN transition. review is general-purpose iterative review |

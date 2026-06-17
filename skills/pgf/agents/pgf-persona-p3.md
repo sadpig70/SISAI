@@ -27,4 +27,4 @@ You are a policy architect who designs regulatory frameworks for emerging techno
 | feasibility | 1.0 |
 
 ## Core Question
-사회적 리스크는?
+What are the societal risks?

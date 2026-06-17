@@ -1,75 +1,75 @@
-# integration-doctrine — 통합/융합 판정 + 메타 폐루프 패턴 (실행 가이드)
+# integration-doctrine — integration/fusion decision + meta closed-loop pattern (execution guide)
 
-> 두 산출물·시스템을 합칠 때 *고를지·통합할지·융합할지*를 정하는 게이트와, "닫혔으나 좁아지지 않는"
-> 메타 폐루프(idea-layer) 패턴. 실증: recreate `select-or-integrate`, recreate⊕aox→HELIX(federate vs fuse).
+> The gate for deciding *whether to select, integrate, or fuse* when combining two artifacts/systems, and the "closed but not narrowing"
+> meta closed-loop (idea-layer) pattern. Reference: recreate `select-or-integrate`, recreate⊕aox→HELIX (federate vs fuse).
 
 ---
 
-## 1. Select vs Integrate (산출물 합치기)
+## 1. Select vs Integrate (combining artifacts)
 
-두 후보가 있을 때 argmax로 하나 고르지(select) 말고, 상보면 제3으로 통합(integrate)한다.
+When there are two candidates, don't just pick one by argmax (select); if they are complementary, integrate them into a third (integrate).
 
 ```python
-overlap        = AI_assess_overlap(a, b)            # 결과물 중복도 0~1
-complementarity= AI_assess_complementarity(a, b)    # 같은 문제·다른 강점축?
-if overlap >= 0.7:                          verdict = "duplicate"   # 하나 버림
-elif overlap < 0.4 and complementarity >= 0.5: verdict = "integrate" # 제3으로 통합
-else:                                       verdict = "independent" # 각자 select
+overlap        = AI_assess_overlap(a, b)            # output overlap 0~1
+complementarity= AI_assess_complementarity(a, b)    # same problem, different strength axes?
+if overlap >= 0.7:                          verdict = "duplicate"   # discard one
+elif overlap < 0.4 and complementarity >= 0.5: verdict = "integrate" # integrate into a third
+else:                                       verdict = "independent" # select each separately
 ```
 
-**통합 채택 게이트 (능가할 때만)**: 통합은 input contract를 넓혀 buildability·boundary를 거의 항상 잃는다.
-이를 상쇄하려면 **세 조건이 함께**:
-1. 강한 same_problem,
-2. **구조적으로 정렬된 상보축**(시간축 lifecycle·인과·파이프라인 단계),
-3. 부모 단독으로 못 보는 **고유가치**(예: 단계 간 모순).
-→ 셋이 있을 때만 통합이 부모 최고점을 능가. 아니면 폐기(원본 유지). margin 근소(±0.1)면 cross-model 합의로 검증.
+**Integration adoption gate (only when it surpasses)**: integration widens the input contract and almost always loses buildability/boundary.
+To offset this, **all three conditions together**:
+1. strong same_problem,
+2. **structurally aligned complementary axes** (temporal lifecycle, causality, pipeline stages),
+3. **unique value** the parent alone cannot see (e.g., contradiction between stages).
+→ Only when all three are present does integration surpass the parent's peak. Otherwise discard (keep originals). If the margin is slim (±0.1), verify by cross-model consensus.
 
-## 2. Fuse vs Federate (시스템 합치기)
+## 2. Fuse vs Federate (combining systems)
 
-목표가 판정을 바꾼다.
+The goal changes the decision.
 
-| 목표 | 답 |
+| Goal | Answer |
 |---|---|
-| 두 시스템을 *따로 유지보수* | **federate** — 공유 substrate(단일 출처) + 어댑터로 연결 |
-| repo *하나로 모든 기능 수행*(자기완결 배포) | **vendor/fuse** — 전부 포함, 단 내부 로직은 단일 출처(*패키징은 융합, 로직은 단일출처*) |
+| *Maintain two systems separately* | **federate** — shared substrate (single source) + connect via adapters |
+| Perform *all functions in a single repo* (self-contained deployment) | **vendor/fuse** — include everything, but internal logic stays single-source (*packaging is fused, logic is single-source*) |
 
-> 함정: 큰 복사 작업의 번거로움을 "아키텍처 우월성(federate)"으로 포장하지 말 것. **사용자의 실제 목표**가
-> "자기완결"이면 vendor가 정답이다. 단 vendor해도 중복 로직은 백본에 한 번만 정의해 desync를 막는다.
-> 실증: recreate⊕aox → HELIX. 처음엔 federate 권고였으나 "repo 하나로 전 기능" 목표엔 vendor가 정답이었다.
+> Pitfall: do not dress up the inconvenience of a large copy operation as "architectural superiority (federate)". If the **user's actual goal**
+> is "self-contained", vendor is the right answer. But even when vendoring, define duplicate logic only once in the backbone to prevent desync.
+> Reference: recreate⊕aox → HELIX. The initial recommendation was federate, but for the "all functions in a single repo" goal, vendor was the right answer.
 
-## 3. 메타 폐루프 (idea-layer) — 닫혔으나 안 좁아지는 나선
+## 3. Meta Closed Loop (idea-layer) — a spiral that closes but does not narrow
 
-반복 생성은 동질화(출력 수렴)로 좁아진다. 이를 **상류 의도 + 하류 게이트 + 환류**로 제어한다.
+Repeated generation narrows through homogenization (output convergence). Control this with **upstream intent + downstream gate + feedback**.
 
 ```text
-IdeaKernel(상류 의도)  →  6 primitive의 *목표* 선언 (NoNameFirst)
+IdeaKernel(upstream intent)  →  declare the *goals* of the 6 primitives (NoNameFirst)
    ↓
-6 게이트(하류 측정)    →  diversity·tournament·evaluator·cross-model·provenance가 *달성* 측정
+6 gates(downstream measure)  →  diversity·tournament·evaluator·cross-model·provenance measure *attainment*
    ↓
-kernel_gap(환류)       →  의도 대비 달성 gap → 다음 kernel 조향 (NoOpenLoop)
+kernel_gap(feedback)         →  attainment gap vs intent → steer the next kernel (NoOpenLoop)
 ```
-- 같은 6 primitive를 **두 지점**(의도 선언 / 달성 측정)에서 표현 → 단일 측정으로 desync 제거.
-- "원이 아니라 나선": 백본(desync 제거) × 다양성 게이트(폭 유지) × 환류(전진) → 폐루프인데 수렴 안 함.
+- Express the same 6 primitives at **two points** (intent declaration / attainment measurement) → eliminate desync with a single measurement.
+- "Not a circle but a spiral": backbone (desync removal) × diversity gate (width preservation) × feedback (advance) → closed loop yet not converging.
 
 ```python
 def AI_measure_kernel_gap(kernel, measured) -> dict:
     gap = {p: kernel.target[p] - measured[p] for p in PRIMITIVES}
-    gap["next_emphasis"] = AI_rank_by_gap(gap)        # gap 큰 primitive → 다음 라운드 강화
-    return gap                                        # registry에 누적 → 환류
+    gap["next_emphasis"] = AI_rank_by_gap(gap)        # primitive with large gap → reinforce next round
+    return gap                                        # accumulate in registry → feedback
 ```
 
-## 4. 동질화 차단 다지점화
+## 4. Multi-Point Homogenization Blocking
 
-단일 게이트로 부족하면 입력→중간→출력 여러 지점에서 막는다.
-- 실증(IdeaFirst): 입력(sdxx)→인사이트(idxx)→카테고리(cixx) 3점 + recreate avoidance + cross-model = 5점.
-- 측정은 **백본 단일 함수**(`measure_diversity`)로, 트리거는 각 지점에서 — 임계 복제 금지(desync 방지).
+When a single gate is insufficient, block at multiple points: input→intermediate→output.
+- Reference (IdeaFirst): input(sdxx)→insight(idxx)→category(cixx) 3 points + recreate avoidance + cross-model = 5 points.
+- Measurement uses a **single backbone function** (`measure_diversity`), with triggers at each point — no threshold duplication (prevent desync).
 
-## 5. 체크리스트
+## 5. Checklist
 
-- [ ] 합치기 전 overlap/complementarity 측정 → select/integrate/independent 판정
-- [ ] 통합은 same_problem+정렬축+고유가치 3조건 충족 시만(능가 게이트). margin 근소면 cross-model
-- [ ] fuse/federate는 **사용자 목표**로 판정(자기완결 → vendor + 단일출처 백본)
-- [ ] 반복 생성엔 메타 폐루프(kernel→게이트→gap 환류) — NoOpenLoop
-- [ ] 동질화는 단일 측정 + 다지점 트리거(임계 복제 금지)
+- [ ] Measure overlap/complementarity before combining → select/integrate/independent decision
+- [ ] Integrate only when the 3 conditions same_problem + aligned axes + unique value are met (surpass gate). If margin is slim, cross-model
+- [ ] Decide fuse/federate by the **user's goal** (self-contained → vendor + single-source backbone)
+- [ ] For repeated generation, use a meta closed loop (kernel→gate→gap feedback) — NoOpenLoop
+- [ ] Homogenization uses a single measurement + multi-point triggers (no threshold duplication)
 
-> 실행 안전 규율 → [`execution-discipline.md`](./execution-discipline.md). 대규모 통합 절차 → [`large-work-playbook.md`](./large-work-playbook.md).
+> Execution safety discipline → [`execution-discipline.md`](./execution-discipline.md). Large-scale integration procedure → [`large-work-playbook.md`](./large-work-playbook.md).

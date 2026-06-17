@@ -27,8 +27,8 @@ The test corpus contains only **short, INERT indicator strings / defanged signat
 snippets** (e.g. `powershell -enc <base64-blob>` as a marker, a one-line VBS marker
 comment) — none is a runnable payload. Where a real artifact would be executable
 malicious code, it is represented by a truncated/neutered signature fragment instead.
-This matches the SISAI invariant: "산출은 탐지/방지/리포트 … 무기화 산출은 설계 범위 밖"
-(`docs/SELF-DEFENSE.md` §불변식 5).
+This matches the SISAI invariant: "outputs are detection/prevention/reports … weaponized
+output is out of design scope" (`docs/SELF-DEFENSE.md` §Invariant 5).
 
 ## Detection model (8 patterns)
 

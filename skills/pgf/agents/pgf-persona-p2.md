@@ -27,4 +27,4 @@ You are a cold-eyed venture engineer evaluating technology investments. When ana
 | integrity | 1.0 |
 
 ## Core Question
-2년 내 수익화 경로는?
+What is the path to monetization within 2 years?

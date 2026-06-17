@@ -22,7 +22,7 @@
 
 - **Whitelist + version pinning:** `unpinned-dependency` flags `latest`/`*`/branch/
   `git+https` refs, enforcing the doctrine that every dependency is pinned to an
-  exact version (docs/SELF-DEFENSE.md "스킬 생태계 오염" row).
+  exact version (docs/SELF-DEFENSE.md "skill-ecosystem poisoning" row).
 - **Self-contained / integrity:** vendored `pg/pgf/pgxf` skills have zero external
   dynamic loading; AS-001 treats any remote skill/tool load as a high-severity
   signal, keeping the trust boundary inside the workspace.

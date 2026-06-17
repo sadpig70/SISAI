@@ -1,93 +1,93 @@
 ---
 name: pgxf
-description: "PGXF (PPR/Gantree IndeX Framework) — file-based index system for ultra-large PG structures. Enables lazy-load subtree access, O(1) node lookup, cross-file status aggregation, and automatic sync with (decomposed) splits. Triggers: 인덱스, 대규모 설계, 노드 찾기, 구조 조감, 상태 집계, pgxf, index, large-scale, node lookup, status aggregate, 전체 구조 파악, 어디에 있는지, 노드 검색. Use this skill whenever a PG/PGF project exceeds 30 nodes, spans multiple files, uses (decomposed) splits, or when the user needs to locate/navigate/aggregate across a large PG tree without loading everything into context."
+description: "PGXF (PPR/Gantree IndeX Framework) — file-based index system for ultra-large PG structures. Enables lazy-load subtree access, O(1) node lookup, cross-file status aggregation, and automatic sync with (decomposed) splits. Triggers: index, large-scale design, find node, structure overview, status aggregate, pgxf, index, large-scale, node lookup, status aggregate, grasp full structure, where is it, node search. Use this skill whenever a PG/PGF project exceeds 30 nodes, spans multiple files, uses (decomposed) splits, or when the user needs to locate/navigate/aggregate across a large PG tree without loading everything into context."
 user-invocable: true
 argument-hint: "build|lookup|sync|status|prune [project-name|node-name]"
 ---
 
 # PGXF — PPR/Gantree IndeX Framework v1.0
 
-> PG가 언어, PGF가 라이브러리라면, **PGXF는 파일 시스템 인덱스**다.
-> 컨텍스트 윈도우에 전체 트리를 로드하지 않고, 필요한 노드만 정밀 접근한다.
+> If PG is the language and PGF is the library, then **PGXF is the file-system index**.
+> It accesses only the nodes you need with precision, without loading the entire tree into the context window.
 
-## 배경: 왜 PGXF가 필요한가
+## Background: Why PGXF Is Needed
 
-PG/PGF 프로젝트가 성장하면 다음 한계에 도달한다:
+As a PG/PGF project grows, it reaches the following limits:
 
-| 한계 | 증상 | PGXF 해결 |
+| Limit | Symptom | PGXF Solution |
 |------|------|-----------|
-| 컨텍스트 폭발 | 노드 50+ → 전체 트리 로드 불가 | **Lazy Load** — 인덱스만 로드, 서브트리는 요청 시 |
-| 탐색 비용 | "이 노드 어디 파일에 있지?" → 전체 스캔 | **O(1) Lookup** — 노드명 → 파일:라인 즉시 반환 |
-| 상태 파악 불가 | 분산된 status를 수동 집계 | **Aggregate** — 인덱스 레벨에서 전체 done/total 즉시 |
-| `(decomposed)` 추적 유실 | 분리된 트리 참조 끊김 | **Cross-ref** — decomposed 링크 자동 추적 |
+| Context explosion | 50+ nodes → cannot load the entire tree | **Lazy Load** — load only the index, fetch subtrees on demand |
+| Navigation cost | "Which file is this node in?" → full scan | **O(1) Lookup** — node name → file:line returned instantly |
+| No status visibility | manually aggregating scattered status | **Aggregate** — overall done/total at the index level, instantly |
+| Lost `(decomposed)` tracking | broken references to split trees | **Cross-ref** — automatically tracks decomposed links |
 
-## PG 기반 의존성
+## PG-Based Dependencies
 
-**PGXF는 PG(PPR/Gantree) 표기법과 PGF(Framework)를 기반으로 한다.**
+**PGXF is built on the PG (PPR/Gantree) notation and the PGF (Framework).**
 
-- PG 스킬: Gantree 노드 문법, PPR 구문, `(decomposed)` 규칙
-- PGF 스킬: DESIGN/WORKPLAN/status 파일 포맷, 실행 모드
+- PG skill: Gantree node syntax, PPR syntax, `(decomposed)` rules
+- PGF skill: DESIGN/WORKPLAN/status file formats, execution modes
 
-PGXF는 이들 위에 **인덱스 계층**을 추가한다. PG/PGF의 문법·규칙을 재정의하지 않는다.
+PGXF adds an **index layer** on top of these. It does not redefine the PG/PGF syntax or rules.
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. 프로젝트 인덱스 빌드
+# 1. Build the project index
 /pgxf build MyProject
 
-# 2. 노드 찾기
+# 2. Find a node
 /pgxf lookup PaymentProcessor
 
-# 3. 전체 상태 조감
+# 3. Overview the full status
 /pgxf status MyProject
 
-# 4. 소스 변경 후 인덱스 동기화
+# 4. Sync the index after source changes
 /pgxf sync MyProject
 
-# 5. 삭제된 노드 정리
+# 5. Prune deleted nodes
 /pgxf prune MyProject
 ```
 
 ---
 
-## 핵심 개념
+## Core Concepts
 
-### Index Entry (노드 단위 인덱스)
+### Index Entry (per-node index)
 
-PGXF의 최소 단위. **하나의 PG 노드 = 하나의 Index Entry**.
+The smallest unit of PGXF. **One PG node = one Index Entry**.
 
 ```python
 IndexEntry = {
-    "node":        str,              # CamelCase 노드명 (유일 식별자)
+    "node":        str,              # CamelCase node name (unique identifier)
     "status":      str,              # done | in-progress | designing | blocked | decomposed | ...
-    "file":        str,              # 소속 파일 경로 (상대)
-    "line":        int,              # 파일 내 시작 줄 번호
-    "depth":       int,              # 트리 깊이 (0 = root)
-    "parent":      Optional[str],    # 부모 노드명
-    "children":    list[str],        # 자식 노드명 목록
-    "deps":        list[str],        # @dep: 의존성
-    "has_ppr":     bool,             # PPR def 블록 존재 여부
-    "ppr_file":    Optional[str],    # PPR 정의 파일 (별도 파일인 경우)
-    "ppr_line":    Optional[int],    # PPR 시작 줄
-    "decomposed_to": Optional[str],  # (decomposed) 시 분리된 트리 파일
-    "tags":        list[str],        # #tag 목록
+    "file":        str,              # containing file path (relative)
+    "line":        int,              # starting line number within the file
+    "depth":       int,              # tree depth (0 = root)
+    "parent":      Optional[str],    # parent node name
+    "children":    list[str],        # list of child node names
+    "deps":        list[str],        # @dep: dependencies
+    "has_ppr":     bool,             # whether a PPR def block exists
+    "ppr_file":    Optional[str],    # PPR definition file (if in a separate file)
+    "ppr_line":    Optional[int],    # PPR starting line
+    "decomposed_to": Optional[str],  # split tree file when (decomposed)
+    "tags":        list[str],        # list of #tags
 }
 ```
 
-### Index File (프로젝트 인덱스)
+### Index File (project index)
 
 ```
 .pgxf/
-    INDEX-{Name}.json          # 프로젝트 인덱스 (노드 레지스트리)
-    MANIFEST.json              # 멀티 프로젝트 매니페스트 (선택)
+    INDEX-{Name}.json          # project index (node registry)
+    MANIFEST.json              # multi-project manifest (optional)
 ```
 
-### Manifest (멀티 프로젝트)
+### Manifest (multi-project)
 
-하나의 워크스페이스에 여러 PGF 프로젝트가 공존할 때, MANIFEST가 전체를 조감한다.
+When multiple PGF projects coexist in one workspace, the MANIFEST provides an overview of all of them.
 
 ```json
 {
@@ -117,44 +117,44 @@ IndexEntry = {
 
 ---
 
-## 실행 모드
+## Execution Modes
 
 | Mode | Trigger | Action |
 |------|---------|--------|
-| `build` | "인덱스 빌드", "index build" | PGF 소스 스캔 → INDEX-{Name}.json 생성 |
-| `lookup` | "노드 찾기", "어디에 있는지" | 노드명 → 파일:줄, PPR 위치, 상태 반환 |
-| `sync` | "동기화", "인덱스 갱신" | 소스 변경분 감지 → 인덱스 증분 업데이트 |
-| `status` | "상태 조감", "전체 현황" | 인덱스 기반 상태 집계 + 트리 요약 출력 |
-| `prune` | "정리", "삭제 노드 제거" | 소스에서 사라진 노드를 인덱스에서 제거 |
+| `build` | "index build", "build index" | scan PGF sources → generate INDEX-{Name}.json |
+| `lookup` | "find node", "where is it" | node name → file:line, PPR location, status |
+| `sync` | "sync", "refresh index" | detect source changes → incremental index update |
+| `status` | "status overview", "overall status" | index-based status aggregation + tree summary output |
+| `prune` | "prune", "remove deleted nodes" | remove nodes that disappeared from the source from the index |
 
-### $ARGUMENTS 파싱
+### $ARGUMENTS Parsing
 
 - `$ARGUMENTS[0]`: mode keyword
-- `$ARGUMENTS[1:]`: 프로젝트명 또는 노드명
-- 예: `/pgxf build SeAAI`, `/pgxf lookup PaymentProcessor`, `/pgxf status`
+- `$ARGUMENTS[1:]`: project name or node name
+- e.g.: `/pgxf build SeAAI`, `/pgxf lookup PaymentProcessor`, `/pgxf status`
 
 ---
 
-## Build 프로세스
+## Build Process
 
-### 입력 소스
+### Input Sources
 
 ```python
 def pgxf_build(project_name: str) -> Index:
-    """PGF 소스 파일들을 스캔하여 인덱스를 생성한다."""
+    """Scan the PGF source files and generate the index."""
 
-    # 1. 소스 수집: .pgf/ 디렉토리의 DESIGN, WORKPLAN 파일
+    # 1. Collect sources: DESIGN, WORKPLAN files in the .pgf/ directory
     sources = scan_pgf_dir(".pgf/", project_name)
     # → ["DESIGN-MyProject.md", "WORKPLAN-MyProject.md", ...]
 
-    # 2. Gantree 파싱: 각 파일의 ## Gantree 섹션에서 노드 추출
+    # 2. Gantree parsing: extract nodes from each file's ## Gantree section
     gantree_nodes = []
     for src in sources:
         nodes = extract_gantree_nodes(src)
-        # 각 노드: name, status, depth, parent, children, deps, tags, line_number
+        # each node: name, status, depth, parent, children, deps, tags, line_number
         gantree_nodes.extend(nodes)
 
-    # 3. PPR 매핑: ## PPR 섹션의 def 블록을 노드에 연결
+    # 3. PPR mapping: link def blocks in the ## PPR section to nodes
     for node in gantree_nodes:
         ppr = find_ppr_def(sources, node.name)
         if ppr:
@@ -162,20 +162,20 @@ def pgxf_build(project_name: str) -> Index:
             node.ppr_file = ppr.file
             node.ppr_line = ppr.line
 
-    # 4. (decomposed) 추적: 분리된 트리 파일 참조 연결
+    # 4. (decomposed) tracking: link references to split tree files
     for node in gantree_nodes:
         if node.status == "decomposed":
             node.decomposed_to = resolve_decomposed_target(node, sources)
 
-    # 5. 인덱스 생성 + 저장
+    # 5. Build + save the index
     index = build_index(project_name, gantree_nodes)
     save_json(f".pgxf/INDEX-{project_name}.json", index)
     return index
 ```
 
-### Gantree 노드 추출 규칙
+### Gantree Node Extraction Rules
 
-들여쓰기 기반 파싱 — PG의 4-space 규칙 적용:
+Indentation-based parsing — applies PG's 4-space rule:
 
 ```
 RootNode // desc (status) @v:1.0          → depth=0, parent=None
@@ -184,15 +184,15 @@ RootNode // desc (status) @v:1.0          → depth=0, parent=None
     ChildB // desc (designing) @dep:ChildA → depth=1, parent=RootNode, deps=[ChildA]
 ```
 
-**노드명 유일성 규칙**: 동일 프로젝트 내 노드명 중복 금지. 중복 발견 시 build에서 경고 + 파일:줄 표시.
+**Node name uniqueness rule**: duplicate node names within the same project are forbidden. When a duplicate is found, build emits a warning + shows file:line.
 
-### PPR def 블록 매칭
+### PPR def Block Matching
 
 ```python
-# 노드명 → PPR 함수명 매칭 규칙
-# CamelCase → snake_case 변환
+# Node name → PPR function name matching rule
+# CamelCase → snake_case conversion
 # PaymentProcessor → payment_processor
-# AI_ExtractKeywords → ai_extract_keywords (인라인은 매칭 불요)
+# AI_ExtractKeywords → ai_extract_keywords (inline — matching not required)
 
 def match_node_to_ppr(node_name: str, def_name: str) -> bool:
     return camel_to_snake(node_name) == def_name
@@ -200,13 +200,13 @@ def match_node_to_ppr(node_name: str, def_name: str) -> bool:
 
 ---
 
-## Lookup 프로세스
+## Lookup Process
 
 ```python
 def pgxf_lookup(node_name: str, project: Optional[str] = None) -> LookupResult:
-    """노드명으로 위치·상태·PPR·의존성을 즉시 반환한다."""
+    """Instantly return location, status, PPR, and dependencies by node name."""
 
-    # 프로젝트 미지정 시 → MANIFEST에서 전체 검색
+    # When no project is specified → search across all in the MANIFEST
     if not project:
         project = find_project_containing(node_name)
 
@@ -225,7 +225,7 @@ def pgxf_lookup(node_name: str, project: Optional[str] = None) -> LookupResult:
     )
 ```
 
-### Lookup 출력 예시
+### Lookup Output Example
 
 ```
 [PGXF] PaymentProcessor
@@ -240,19 +240,19 @@ def pgxf_lookup(node_name: str, project: Optional[str] = None) -> LookupResult:
 
 ---
 
-## Sync 프로세스
+## Sync Process
 
 ```python
 def pgxf_sync(project_name: str) -> SyncResult:
-    """소스 변경분을 감지하여 인덱스를 증분 업데이트한다."""
+    """Detect source changes and incrementally update the index."""
 
     old_index = load_index(project_name)
-    new_index = pgxf_build(project_name)  # 전체 리빌드
+    new_index = pgxf_build(project_name)  # full rebuild
 
     diff = compute_diff(old_index, new_index)
-    # diff.added:    새로 추가된 노드
-    # diff.removed:  삭제된 노드
-    # diff.modified: 상태/위치/PPR 변경된 노드
+    # diff.added:    newly added nodes
+    # diff.removed:  deleted nodes
+    # diff.modified: nodes with changed status/location/PPR
 
     save_json(f".pgxf/INDEX-{project_name}.json", new_index)
 
@@ -264,7 +264,7 @@ def pgxf_sync(project_name: str) -> SyncResult:
     )
 ```
 
-### Sync 출력 예시
+### Sync Output Example
 
 ```
 [PGXF] sync OrderSystem
@@ -276,11 +276,11 @@ def pgxf_sync(project_name: str) -> SyncResult:
 
 ---
 
-## Status 프로세스
+## Status Process
 
 ```python
 def pgxf_status(project: Optional[str] = None) -> StatusReport:
-    """인덱스 기반 상태 집계. 프로젝트 미지정 시 MANIFEST 전체."""
+    """Index-based status aggregation. When no project is specified, the entire MANIFEST."""
 
     if project:
         index = load_index(project)
@@ -290,7 +290,7 @@ def pgxf_status(project: Optional[str] = None) -> StatusReport:
         return aggregate_all(manifest)
 ```
 
-### Status 출력 예시 (단일 프로젝트)
+### Status Output Example (single project)
 
 ```
 [PGXF] OrderSystem status
@@ -306,7 +306,7 @@ def pgxf_status(project: Optional[str] = None) -> StatusReport:
   📁 files: 3 (DESIGN-OrderSystem.md, DESIGN-ShippingFlow.md, WORKPLAN-OrderSystem.md)
 ```
 
-### Status 출력 예시 (멀티 프로젝트 — MANIFEST)
+### Status Output Example (multi-project — MANIFEST)
 
 ```
 [PGXF] workspace status
@@ -324,11 +324,11 @@ def pgxf_status(project: Optional[str] = None) -> StatusReport:
 
 ---
 
-## Prune 프로세스
+## Prune Process
 
 ```python
 def pgxf_prune(project_name: str) -> PruneResult:
-    """소스에서 사라진 노드를 인덱스에서 제거한다."""
+    """Remove nodes that have disappeared from the source from the index."""
 
     index = load_index(project_name)
     current_nodes = scan_current_nodes(project_name)
@@ -343,26 +343,26 @@ def pgxf_prune(project_name: str) -> PruneResult:
 
 ---
 
-## (decomposed) 자동 추적
+## (decomposed) Automatic Tracking
 
-PGXF의 핵심 가치: `(decomposed)` 노드를 인덱스가 자동으로 크로스 레퍼런스한다.
+The core value of PGXF: the index automatically cross-references `(decomposed)` nodes.
 
-### 시나리오
+### Scenario
 
 ```
 # DESIGN-OrderSystem.md
-OrderSystem // 주문 시스템 (in-progress)
-    PaymentFlow // 결제 흐름 — see DESIGN-PaymentFlow.md (decomposed)
-    ShippingFlow // 배송 흐름 (designing)
+OrderSystem // order system (in-progress)
+    PaymentFlow // payment flow — see DESIGN-PaymentFlow.md (decomposed)
+    ShippingFlow // shipping flow (designing)
 
-# DESIGN-PaymentFlow.md (분리된 트리)
-PaymentFlow // 결제 흐름 상세 (in-progress)
-    ValidateCard // 카드 검증 (done)
-    ChargeCard // 카드 청구 (in-progress) @dep:ValidateCard
-    SendReceipt // 영수증 발송 (designing) @dep:ChargeCard
+# DESIGN-PaymentFlow.md (split tree)
+PaymentFlow // payment flow details (in-progress)
+    ValidateCard // card validation (done)
+    ChargeCard // card charge (in-progress) @dep:ValidateCard
+    SendReceipt // receipt dispatch (designing) @dep:ChargeCard
 ```
 
-### PGXF build 결과
+### PGXF build Result
 
 ```json
 {
@@ -402,107 +402,107 @@ PaymentFlow // 결제 흐름 상세 (in-progress)
 }
 ```
 
-**핵심**: `PaymentFlow`의 `children`에 분리된 파일의 자식들이 포함된다. 인덱스가 파일 경계를 넘어 트리를 재구성한다.
+**Key point**: `PaymentFlow`'s `children` include the children from the split file. The index reconstructs the tree across file boundaries.
 
 ---
 
-## Lazy Load 패턴
+## Lazy Load Pattern
 
-AI가 대규모 프로젝트 작업 시 PGXF를 활용하는 표준 패턴:
+The standard pattern an AI uses to leverage PGXF when working on large projects:
 
 ```python
 def work_with_large_project(task: str, project: str):
-    """대규모 프로젝트에서 특정 작업 수행 — 전체 로드 없이."""
+    """Perform a specific task in a large project — without loading everything."""
 
-    # 1단계: 인덱스만 로드 (경량)
+    # Step 1: load only the index (lightweight)
     index = pgxf_load_index(project)
 
-    # 2단계: 작업 대상 노드 식별
+    # Step 2: identify the target nodes for the task
     target_nodes = AI_identify_relevant_nodes(task, index.summary)
 
-    # 3단계: 해당 노드의 소스만 로드
+    # Step 3: load only the sources for those nodes
     for node_name in target_nodes:
         entry = index.nodes[node_name]
         source = load_file_range(entry.file, entry.line, estimate_end(entry))
         if entry.has_ppr:
             ppr = load_file_range(entry.ppr_file, entry.ppr_line, estimate_ppr_end(entry))
 
-    # 4단계: 작업 수행 후 인덱스 동기화
+    # Step 4: perform the task, then sync the index
     execute_task(task, loaded_sources)
     pgxf_sync(project)
 ```
 
 ---
 
-## 파일 경로 규칙
+## File Path Rules
 
 ```text
 <project-root>/
-    .pgf/                              # PGF 소스 (기존)
+    .pgf/                              # PGF sources (existing)
         DESIGN-{Name}.md
         WORKPLAN-{Name}.md
         status-{Name}.json
-    .pgxf/                             # PGXF 인덱스 (신규)
-        INDEX-{Name}.json              # 프로젝트별 인덱스
-        MANIFEST.json                  # 워크스페이스 매니페스트 (선택)
+    .pgxf/                             # PGXF index (new)
+        INDEX-{Name}.json              # per-project index
+        MANIFEST.json                  # workspace manifest (optional)
 ```
 
-- `.pgxf/`는 `.pgf/`와 **동일 레벨**에 위치
-- INDEX 파일은 소스가 아닌 **파생 산출물** — 언제든 rebuild 가능
-- MANIFEST는 여러 INDEX를 집계하는 **메타 인덱스**
+- `.pgxf/` sits at the **same level** as `.pgf/`
+- The INDEX file is a **derived artifact**, not a source — it can be rebuilt at any time
+- The MANIFEST is a **meta-index** that aggregates multiple INDEXes
 
 ---
 
-## PGF 연동
+## PGF Integration
 
-| PGF 이벤트 | PGXF 동작 |
+| PGF Event | PGXF Action |
 |------------|-----------|
-| `pgf design` 완료 | `pgxf build` 자동 트리거 |
-| `pgf execute` 노드 상태 변경 | `pgxf sync` 권장 (수동) |
-| `pgf loop` 시작 | index 로드하여 전체 구조 파악 후 실행 |
-| `pgf full-cycle` 완료 | `pgxf sync` + `pgxf status` |
-| `(decomposed)` 분리 발생 | 다음 `pgxf sync`에서 자동 추적 |
+| `pgf design` completes | `pgxf build` auto-triggered |
+| `pgf execute` node status change | `pgxf sync` recommended (manual) |
+| `pgf loop` starts | load the index to grasp the full structure before execution |
+| `pgf full-cycle` completes | `pgxf sync` + `pgxf status` |
+| `(decomposed)` split occurs | auto-tracked on the next `pgxf sync` |
 
 ---
 
-## 실행 규칙
+## Execution Rules
 
-1. `/pgxf build` — `.pgf/` 내 DESIGN/WORKPLAN 파일 전수 스캔 → INDEX 생성
-2. `/pgxf lookup NodeName` — INDEX에서 O(1) 검색, 없으면 MANIFEST 검색
-3. `/pgxf sync` — 전체 rebuild 후 diff 리포트
-4. `/pgxf status` — INDEX/MANIFEST 기반 집계 출력
-5. `/pgxf prune` — 소스에 없는 고아 노드 제거
-6. 프로젝트명 생략 시 → 현재 디렉토리의 `.pgf/`에서 자동 감지
-7. `.pgxf/` 디렉토리 미존재 시 → 자동 생성
-
----
-
-## INDEX-{Name}.json 전체 스키마
-
-상세 스키마와 필드별 규칙: `{SKILL_DIR}/references/pgxf-format.md`
-
-> **Path convention**: `{SKILL_DIR}`는 이 스킬의 루트 디렉터리(SKILL.md가 있는 곳)를 가리키는 런타임 중립 placeholder다. 각 런타임이 로컬 설치 경로로 치환한다. 절대경로·런타임 종속 env var를 하드코딩하지 않는다 (PGF SKILL과 동일 규칙).
+1. `/pgxf build` — full scan of DESIGN/WORKPLAN files in `.pgf/` → generate INDEX
+2. `/pgxf lookup NodeName` — O(1) search in the INDEX, fall back to MANIFEST search if not found
+3. `/pgxf sync` — full rebuild followed by a diff report
+4. `/pgxf status` — aggregated output based on INDEX/MANIFEST
+5. `/pgxf prune` — remove orphan nodes not present in the source
+6. When the project name is omitted → auto-detect from `.pgf/` in the current directory
+7. When the `.pgxf/` directory does not exist → create it automatically
 
 ---
 
-## 체크리스트
+## Full INDEX-{Name}.json Schema
 
-### Build 검증
+Detailed schema and per-field rules: `{SKILL_DIR}/references/pgxf-format.md`
 
-- [ ] 모든 DESIGN/WORKPLAN 파일이 스캔되었는가?
-- [ ] 노드명 중복이 없는가?
-- [ ] `(decomposed)` 노드의 분리 파일이 존재하는가?
-- [ ] PPR def 블록이 올바른 노드에 매핑되었는가?
-- [ ] parent-children 관계가 양방향 일관성인가?
+> **Path convention**: `{SKILL_DIR}` is a runtime-neutral placeholder pointing to this skill's root directory (where SKILL.md resides). Each runtime substitutes it with the local install path. Do not hardcode absolute paths or runtime-dependent env vars (same rule as the PGF SKILL).
 
-### Sync 검증
+---
 
-- [ ] added/removed/modified 카운트가 실제 변경과 일치하는가?
-- [ ] summary 집계가 nodes 상태와 일치하는가?
-- [ ] `decomposed_to` 참조가 유효한 파일을 가리키는가?
+## Checklist
 
-### 운영 규칙
+### Build Verification
 
-- [ ] INDEX 파일은 파생물 — git에 포함 여부는 프로젝트 정책 (권장: .gitignore)
-- [ ] MANIFEST는 선택 — 단일 프로젝트에서는 불필요
-- [ ] 노드 50+ 프로젝트에서는 lookup 전 반드시 sync 확인
+- [ ] Were all DESIGN/WORKPLAN files scanned?
+- [ ] Are there no duplicate node names?
+- [ ] Do the split files of `(decomposed)` nodes exist?
+- [ ] Were PPR def blocks mapped to the correct nodes?
+- [ ] Are parent-children relationships bidirectionally consistent?
+
+### Sync Verification
+
+- [ ] Do the added/removed/modified counts match the actual changes?
+- [ ] Does the summary aggregation match the nodes' statuses?
+- [ ] Does the `decomposed_to` reference point to a valid file?
+
+### Operational Rules
+
+- [ ] The INDEX file is a derived artifact — whether to include it in git is a project policy (recommended: .gitignore)
+- [ ] The MANIFEST is optional — unnecessary for a single project
+- [ ] For 50+ node projects, always verify sync before lookup

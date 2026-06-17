@@ -74,9 +74,9 @@ def cycle(
             max_iterations=with_review,
             status_path=f"{pgf_dir}/status-{seed.name}.json",
         )
-        # status JSON에 review_iterations / unresolved_issues 만 추가
+        # add only review_iterations / unresolved_issues to the status JSON
         if review_result.status == "needs_user_ack":
-            # 강제 차단 아님 — 잔여 이슈 보고 후 사용자 승인 시 plan 진행
+            # not a hard block — report remaining issues, then proceed to plan upon user approval
             if not AI_request_user_ack(review_result.unresolved_issues):
                 return CycleResult(status="blocked",
                                    issues=review_result.unresolved_issues)
@@ -123,8 +123,8 @@ def cycle(
 | discover → design | `auto_select_idea` succeeds (≥1 vote) | Halt + request manual selection | create |
 | (start) → design | mode = full-cycle | — | full-cycle |
 | design → review (opt-in) | `--with-review[=N]` set, not Level 1, not micro | Skip review gate | full-cycle |
-| review → plan | Critical=0 AND High≤2 (또는 사용자 ack) | revise (≤N회) → DESIGN 재작성 후 재검토 | full-cycle |
-| review → blocked | N회 초과 + 사용자 ack 거부 | report unresolved_issues | full-cycle |
+| review → plan | Critical=0 AND High≤2 (or user ack) | revise (≤N times) → rewrite DESIGN then re-review | full-cycle |
+| review → blocked | N exceeded + user ack refused | report unresolved_issues | full-cycle |
 | design → plan | 4 completion criteria met (atomized, PPR written, no @dep cycles, checklist passed) | Retry design (up to 3 times) | both |
 | plan → execute | WORKPLAN + status JSON created | Error report + halt | both |
 | execute → verify | All nodes terminal (`done` or `blocked`) | Continue execute | both |

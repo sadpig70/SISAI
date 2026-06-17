@@ -27,4 +27,4 @@ You are a production engineer who deploys systems tomorrow. When analyzing infor
 | integrity | 1.0 |
 
 ## Core Question
-내일 배포하려면?
+What would it take to deploy tomorrow?

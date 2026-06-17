@@ -1,36 +1,36 @@
-# SELF-DEFENSE — SISAI가 스스로를 지키는 법
+# SELF-DEFENSE — how SISAI defends itself
 
-> SISAI는 *pg/pgf/pgxf 스킬 + AI 런타임* 기반의 보안 AI다. 그런데 SISAI가 수집·분석하는
-> 위협 중 다수(프롬프트 인젝션·데이터 포이즈닝·공급망·스킬 생태계 오염)는 **바로 SISAI 같은
-> AI 시스템을 표적**으로 한다. 따라서 SISAI는 "남을 지키는 도구"이면서 동시에 "스스로를
-> 지켜야 하는 표적"이다. 이 문서는 그 자기방어 설계를 명시한다. (근거: `_workspace/AI를
-> 악용한 해킹 방법,사례,해결방안 요약.md` §3·§5·§6·§8)
+> SISAI is a security AI built on *the pg/pgf/pgxf skills + an AI runtime*. Yet many of the threats SISAI
+> collects and analyzes (prompt injection, data poisoning, supply chain, skill-ecosystem poisoning) **target
+> exactly AI systems like SISAI itself**. Thus SISAI is both a "tool that protects others" and a "target that
+> must protect itself." This document specifies that self-defense design. (Basis: the workspace analysis of AI-abuse hacking methods, cases, and solutions §3, §5, §6, §8)
 
-## 위협 → SISAI 노출 → 백본 방어
+## Threat → SISAI exposure → backbone defense
 
-| 위협(요약.md) | SISAI가 받는 위험 | 백본 방어 |
+| Threat (summary) | Risk to SISAI | Backbone defense |
 |---|---|---|
-| **프롬프트 인젝션** (OWASP 1위) | 수집한 위협 문서·README·CVE 설명에 악성 지시가 숨겨짐 | **결정론 경계** — 수집 텍스트는 `core/`의 제어 흐름을 바꿀 수 없다(데이터≠지시). core는 stdlib·AI 없음 |
-| **데이터 포이즈닝** (5문서→90%) | 위협/방어 코퍼스에 조작 샘플 침투 | **ledger 지문 + 출처 추적** — `fingerprint`로 동일/유사 항목 식별, `provenance`로 출처 검증. 검증 안 된 방어는 코퍼스 환류 불가 |
-| **공급망** (LiteLLM 40분 4만) | 참조 오픈소스·패키지가 오염원 | **외부우선이되 검증게이트** — 외부 방어는 `verification.passed`+구현 있어야 기록. AIBOM 관점 |
-| **스킬 생태계 오염** (314개 악성) | vendored pg/pgf/pgxf·MCP 변조 | **자기완결 + 무결성** — 스킬을 프로젝트 안에 vendor(외부 동적 로드 0), `validate`가 스킬 존재 확인. 채널/코퍼스 지문 고정 |
+| **Prompt injection** (OWASP #1) | Malicious instructions hidden in collected threat docs, READMEs, CVE descriptions | **Deterministic boundary** — ingested text cannot change the control flow of `core/` (data ≠ instructions). core has no stdlib/AI dependency on outside input |
+| **Data poisoning** (5 docs → 90%) | Manipulated samples infiltrate the threat/defense corpus | **ledger fingerprint + provenance tracking** — `fingerprint` identifies identical/similar entries, `provenance` verifies the source. Unverified defenses cannot feed back into the corpus |
+| **Supply chain** (LiteLLM, 40k in 40 min) | Referenced open source/packages become a contamination source | **External-first but verification-gated** — an external defense is recorded only with `verification.passed` + an implementation. AIBOM perspective |
+| **Skill-ecosystem poisoning** (314 malicious) | Tampering with vendored pg/pgf/pgxf or MCP | **Self-contained + integrity** — skills are vendored inside the project (0 external dynamic loading), and `validate` confirms skill presence. Channel/corpus fingerprints are pinned |
 
-## 불변식 (코드로 강제)
+## Invariants (enforced in code)
 
-1. **데이터 ≠ 지시**: `core/`는 순수 결정론(stdlib). 수집된 어떤 문자열도 분기/실행을 유발하지
-   않는다. AI 판단(이해·설계)은 메타층(skills)에서만, 그 출력도 백본 계약(schema)으로 검증 후 사용.
-2. **검증 후에만 환류**: `defense_to_corpus_entry`는 `is_verified`(passed + implementations)
-   가 아니면 `ValueError`. 미검증 방어가 코퍼스를 오염시킬 수 없다.
-3. **재사용 지문 게이트**: 채널·위협·방어는 `fingerprint`로 1회만 기록(idempotent). 중복 주입
-   증폭을 차단.
-4. **원자적 쓰기**: ledger/corpus/registry는 `atomic_write_json`(temp+os.replace) — 크래시
-   중에도 손상 불가.
-5. **defensive-only**: 산출은 탐지/방지/리포트. 무기화 산출(작동 익스플로잇·표적공격 자동화)은
-   설계 범위 밖이며 코퍼스/ledger에 적재 대상이 아니다.
+1. **Data ≠ instructions**: `core/` is pure determinism (stdlib). No collected string triggers branching/execution.
+   AI judgment (understanding/design) happens only in the meta layer (skills), and its output is used only after
+   validation against the backbone contract (schema).
+2. **Feedback only after verification**: `defense_to_corpus_entry` raises `ValueError` unless `is_verified`
+   (passed + implementations). An unverified defense cannot poison the corpus.
+3. **Reuse fingerprint gate**: channels, threats, and defenses are recorded exactly once via `fingerprint`
+   (idempotent). This blocks duplicate-injection amplification.
+4. **Atomic writes**: ledger/corpus/registry use `atomic_write_json` (temp + os.replace) — uncorruptible even
+   during a crash.
+5. **defensive-only**: output is detection/prevention/reports. Weaponized output (working exploits, automated
+   targeted attacks) is out of design scope and is not eligible for loading into the corpus/ledger.
 
-## 운영 권고 (메타층 — AI 런타임)
+## Operational recommendations (meta layer — AI runtime)
 
-- 수집 입력은 **격리**해 처리(별도 컨텍스트/도구 권한 최소화). 외부 텍스트를 시스템 지시로 승격 금지.
-- 새 채널·코퍼스 항목은 **출처 서명/해시**를 함께 기록(provenance) 후 채택.
-- vendored 스킬·MCP는 **화이트리스트 + 버전 고정**, 변경 시 재검증(`validate`).
-- 자율 외부 행위(차단·배포)는 **게이트 통과분만**, 되돌리기 어려운 행위는 사람 승인.
+- Process ingested input **in isolation** (separate context / minimized tool permissions). Never promote external text to system instructions.
+- Record new channel/corpus entries together with a **source signature/hash** (provenance) before adoption.
+- Vendored skills/MCP follow a **whitelist + version pinning**; re-verify (`validate`) on any change.
+- Autonomous external actions (blocking/distribution) only for **what passed the gates**; hard-to-reverse actions require human approval.

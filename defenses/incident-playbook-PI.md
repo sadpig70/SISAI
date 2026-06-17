@@ -17,7 +17,7 @@ PI-001 detector (`defenses/detectors/pi_detector.py`) flags ingested external te
 3. **Record provenance** — capture source channel + fingerprint so the same poisoned
    sample cannot re-amplify (idempotent ledger, invariant #3).
 4. **Human review gate** — `action_on_match` includes `require_human_review`; an
-   irreversible/outbound action stays blocked until 정욱님 approves (AGENTS.md gate).
+   irreversible/outbound action stays blocked until the operator approves (AGENTS.md gate).
 5. **Triage & report** — attach the verdict (matched pattern ids + severity) to the
    threat record; no defense enters the corpus until verified (invariant #2).
 

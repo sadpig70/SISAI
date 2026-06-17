@@ -2,37 +2,37 @@
 
 ## Purpose
 
-DESIGN 완료 → PLAN 전환 전에 설계 품질을 다관점으로 검증.
-구현 후 rework보다 설계 단계에서 문제를 잡는 것이 10배 저렴하다.
+After DESIGN is complete → before the PLAN transition, verify design quality from multiple perspectives.
+Catching problems at the design stage is 10x cheaper than rework after implementation.
 
 ## When to Trigger
 
-- `design` 모드의 4개 완료 기준이 충족된 후 (사용자 명시 호출)
-- `full-cycle` / `create` 모드에서 **`--with-review[=N]` 플래그가 있을 때만** design → plan 전환 직전 (opt-in, 기본 비활성)
-- 사용자가 `/PGF design-review` 또는 `/PGF review --design` 요청 시
+- After the 4 completion criteria of the `design` mode are met (explicit user invocation)
+- In `full-cycle` / `create` mode, **only when the `--with-review[=N]` flag is present**, just before the design → plan transition (opt-in, disabled by default)
+- When the user requests `/PGF design-review` or `/PGF review --design`
 
-> 기본 풀사이클은 안정성을 위해 review 게이트를 포함하지 않는다. 검토가 필요한 작업에서만 명시적으로 플래그를 부여하라.
+> The default full cycle does not include a review gate, for stability. Apply the flag explicitly only for work that needs review.
 
-## Loop Contract (full-cycle `--with-review[=N]` 호출 시)
+## Loop Contract (when full-cycle is invoked with `--with-review[=N]`)
 
-`full_cycle()`이 호출하는 진입점은 `run_design_review_loop(design_path, max_iterations, status_path)` 이며 다음을 보장한다:
+The entry point that `full_cycle()` invokes is `run_design_review_loop(design_path, max_iterations, status_path)`, which guarantees the following:
 
-1. **반복 상한**: 최대 N회 (`max_iterations`) review-revise 사이클. N의 기본값은 1
-2. **통과 기준**: `Critical=0 AND High≤2` → `status="passed"` 즉시 반환
-3. **revise 동작**: 통과 실패 시 `AI_revise_design(design_path, issues)` 호출 후 재검토
-4. **N회 초과 시**: `status="needs_user_ack"` 반환 + `unresolved_issues` 동봉 (강제 차단 아님)
-5. **status JSON 갱신**: `review_iterations`(int), `unresolved_issues`(list[Issue])만 추가 — 기존 키 불변
-6. **Skip 자동화**: Level 1 (≤3 노드) / `micro` 모드 → 호출 자체를 스킵
+1. **Iteration cap**: at most N (`max_iterations`) review-revise cycles. The default value of N is 1
+2. **Pass criterion**: `Critical=0 AND High≤2` → return `status="passed"` immediately
+3. **revise behavior**: on pass failure, call `AI_revise_design(design_path, issues)` then re-review
+4. **When N is exceeded**: return `status="needs_user_ack"` + enclose `unresolved_issues` (not a hard block)
+5. **status JSON update**: add only `review_iterations` (int) and `unresolved_issues` (list[Issue]) — existing keys unchanged
+6. **Skip automation**: Level 1 (≤3 nodes) / `micro` mode → skip the call itself
 
 ## 3-Perspective Design Review
 
-기존 14 페르소나 중 3개 관점을 선택하여 경량 리뷰:
+Select 3 perspectives from the existing 14 personas for a lightweight review:
 
 | Reviewer | Persona Base | Focus |
 |----------|-------------|-------|
-| **Feasibility Reviewer** | P5 (Field Operator) | 구현 가능성, 기술 선택, 복잡도 |
-| **Risk Reviewer** | P7 (Contrarian Critic) | 치명적 약점, 숨은 가정, 확장성 위험 |
-| **Architecture Reviewer** | P8 (Convergence Architect) | 구조 일관성, 모듈 결합도, 진화 가능성 |
+| **Feasibility Reviewer** | P5 (Field Operator) | implementation feasibility, technology choice, complexity |
+| **Risk Reviewer** | P7 (Contrarian Critic) | critical weaknesses, hidden assumptions, scalability risk |
+| **Architecture Reviewer** | P8 (Convergence Architect) | structural consistency, module coupling, evolvability |
 
 ## Review Process
 

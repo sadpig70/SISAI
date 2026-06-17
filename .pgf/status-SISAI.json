@@ -4,7 +4,7 @@
   "phase": "verify",
   "design": ".pgf/DESIGN-SISAI.md",
   "workplan": ".pgf/WORKPLAN-SISAI.md",
-  "seed_reference": "_workspace/AI를 악용한 해킹 방법,사례,해결방안 요약.md",
+  "seed_reference": "workspace analysis: AI-abuse hacking methods, cases, and solutions (summary)",
   "summary": {"done": 14, "total": 14},
   "batches": {
     "B0_Fingerprint": "done — core/sisai_fingerprint.py (channel/threat/defense fingerprints)",

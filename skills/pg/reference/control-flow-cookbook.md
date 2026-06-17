@@ -1,14 +1,14 @@
-# control-flow-cookbook — 타입 I/O · 조건 · 분기 · 반복 · 도급 (실행 가이드)
+# control-flow-cookbook — Type I/O · Conditions · Branching · Loops · Contracting (Execution Guide)
 
-> pg는 작업의 **입출력을 타입으로 정의**하고 **조건·분기·반복**으로 흐름을 제어한다. 그래서 여러 도급
-> 단위(스킬/에이전트)가 타입 계약으로 자재를 주고받는 **공장 생산라인 같은 복잡 작업**도 프로그래밍할 수 있다.
-> SKILL.md가 문법을 *정의*하면, 이 문서는 그 문법을 **복잡 작업 오케스트레이션에 쓰는 패턴**을 모은다.
+> pg **defines a task's I/O as types** and controls flow with **conditions, branching, and loops**. This lets it program even
+> **complex tasks like a factory production line**, where multiple contracting units (skills/agents) exchange materials via type contracts.
+> Where SKILL.md *defines* the syntax, this document collects **patterns for using that syntax in complex-task orchestration**.
 
 ---
 
-## 1. 타입 I/O — 라인을 흐르는 "자재"
+## 1. Type I/O — the "Materials" Flowing Down the Line
 
-도급 단위가 주고받는 자재를 타입으로 정의한다(계약의 핵심). Python 타입힌트 + 스키마 리터럴(PG 허용).
+Define the materials that contracting units exchange as types (the heart of the contract). Python type hints + schema literals (allowed in PG).
 
 ```python
 ChannelCatalog = dict = {"version": str, "channels": list[Channel], "total": int}
@@ -17,9 +17,9 @@ Idea           = dict = {"id": str, "title": str, "domains": list[str], "scores"
 DesignSeed     = dict = {"name": str, "single_question": str, "sources": list[str]}
 ```
 
-## 2. 도급 단위(contractor) — 입력계약 → 출력계약 + 검수
+## 2. Contractor — Input Contract → Output Contract + Inspection
 
-각 단위 = 하청. 입력 타입을 받아 출력 타입을 납품하고, acceptance를 통과해야 다음 공정.
+Each unit = a subcontractor. It takes an input type, delivers an output type, and must pass acceptance to proceed to the next stage.
 
 ```python
 Contractor = dict = {"name": str, "input_type": type, "output_type": type,
@@ -27,88 +27,88 @@ Contractor = dict = {"name": str, "input_type": type, "output_type": type,
                      "max_retry": int}
 ```
 
-## 3. 조건 · 분기 (Python 흐름 제어 그대로)
+## 3. Conditions · Branching (Python Flow Control As Is)
 
 ```python
-# 환경 능력으로 라인 교체 (분기)
+# swap the line by environment capability (branching)
 if env["cross_model"] == "available":   line = full_line
 elif env["cross_model"] == "unavailable": line = swap(line, {"cix":"sa-icx","evx":"sa-evx"})
 else:                                    line = mark_partial(line)
 
-# 게이트 분기 (재사용 차단)
+# gate branching (block reuse)
 if is_consumed(candidate, ledger)["consumed"]:
-    return "reject:re-steer"            # 폐기 → 재조향
+    return "reject:re-steer"            # discard → re-steer
 ```
 
-## 4. 반복 (4종 패턴)
+## 4. Loops (4 Patterns)
 
 ```python
-# ① 공정 재시도 (max_retry)
+# ① stage retry (max_retry)
 for attempt in range(c["max_retry"] + 1):
     out = AI_invoke(c["name"], material)
     if AI_verify(out, c["acceptance"]): return out
     if attempt >= 1 and c["failure_strategy"] == "redesign":
         c["ppr"] = AI_redesign(c, out.failure)
 
-# ② Convergence Loop (생성-비판-진화: 안정화까지)
+# ② Convergence Loop (generate-critique-evolve: until stabilization)
 while True:
     eval = AI_evaluate(draft, criteria)
     if eval.score >= threshold: break
     draft = AI_revise(draft, eval.feedback)
 
-# ③ island 재발산 (다양성 미달 동안)
+# ③ island re-divergence (while diversity is below floor)
 while unique_ratio(pool, sim) < floor:
     pool = regenerate(pool, focus=AI_find_untouched_axes(pool))
 
-# ④ 생산 라운드 (목표/예산까지)
+# ④ production round (until target/budget)
 while len(out) < target and budget.remaining() > 0:
     out.append(run_one_round())
 ```
 
-## 5. 메인 프로그램 — 타입 × 분기 × 반복 결합 (공장 라인)
+## 5. Main Program — Combining Types × Branching × Loops (Factory Line)
 
 ```python
 def run_factory(target: int, budget: int, env: dict) -> list[DesignSeed]:
     seeds = []
-    while len(seeds) < target and budget_left(budget) > 0:        # 반복 ④
-        line = AI_route_by_capability(env, LINE)                  # 분기 ①
+    while len(seeds) < target and budget_left(budget) > 0:        # loop ④
+        line = AI_route_by_capability(env, LINE)                  # branching ①
         material = None
-        for c in line:                                           # 도급 직렬
-            material = run_stage(c, material)                    # 반복 ①(검수+재시도)
+        for c in line:                                           # contractors in series
+            material = run_stage(c, material)                    # loop ① (inspect + retry)
             if c["name"] == "cix":
-                material = enforce_diversity(converge(material))  # 반복 ②③
+                material = enforce_diversity(converge(material))  # loop ②③
         winner = material["winner"]
-        if AI_gate(winner, ledger) == "reject:re-steer":         # 분기(게이트)
-            continue                                              # 재조향 후 다음 라운드
+        if AI_gate(winner, ledger) == "reject:re-steer":         # branching (gate)
+            continue                                              # re-steer then next round
         seeds.append(AI_to_seed(winner))
     return seeds
     # acceptance_criteria:
-    #   - 각 도급 출력이 output_type·acceptance 충족 (공정 검수)
-    #   - 반복은 종료성 보장 (target/budget 중 먼저 닿는 쪽)
+    #   - each contractor output satisfies output_type and acceptance (stage inspection)
+    #   - loops guarantee termination (whichever of target/budget is reached first)
 ```
 
-## 6. [parallel] — 독립 공정 병렬
+## 6. [parallel] — Parallel Independent Stages
 
 ```python
 [parallel]
-recombine = AI_recombine(inv)      # 독립
+recombine = AI_recombine(inv)      # independent
 mutate    = AI_mutate(inv)
 transplant= AI_transplant(inv)
 [/parallel]
-pool = recombine + mutate + transplant     # 병합
+pool = recombine + mutate + transplant     # merge
 ```
-규칙: `[parallel]` 내부 노드는 **독립**(`@dep:` 금지), 중첩 금지.
+Rule: nodes inside `[parallel]` are **independent** (`@dep:` forbidden), no nesting.
 
-## 7. 실행 전 시뮬레이션 (도급 라인도 dry-run)
+## 7. Pre-Execution Simulation (dry-run the Contracting Line Too)
 
 ```python
 def AI_simulate_factory(target, env) -> SimVerdict:
-    line = AI_route_by_capability(env, LINE)   # 단독환경이면 sa-*로 교체될 것 예측
-    # 반복④ 종료성·분기·병목을 라인 안 돌리고 미리 확인 → GO | REDESIGN
+    line = AI_route_by_capability(env, LINE)   # in a standalone environment, predict it will be swapped to sa-*
+    # check loop ④ termination, branching, and bottlenecks in advance without running the line → GO | REDESIGN
 ```
 
-**실증**: `D:/HELIX/specs/PRODUCTION-LINE.pg.md` (HELIX 연속생산을 공장 도급 pg 프로그램으로),
-`DESIGN-HELIX-UNIFIED-PIPELINE.pg.md` (aox·recreate 전 기능 단일 폐루프).
+**Demonstration**: `D:/HELIX/specs/PRODUCTION-LINE.pg.md` (HELIX continuous production as a factory-contracting pg program),
+`DESIGN-HELIX-UNIFIED-PIPELINE.pg.md` (a single closed loop over all aox·recreate features).
 
-> 관련: 작업 자체를 프로그래밍하는 7단계 → [`work-as-program.md`](./work-as-program.md).
-> 에이전트 간 도급 핸드오프 규격(TaskSpec) → pgf `reference/agent-protocol.md`.
+> Related: the 7 stages of programming the work itself → [`work-as-program.md`](./work-as-program.md).
+> Inter-agent contracting handoff spec (TaskSpec) → pgf `reference/agent-protocol.md`.

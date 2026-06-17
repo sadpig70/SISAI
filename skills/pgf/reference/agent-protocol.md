@@ -1,48 +1,48 @@
-# PGF Agent Protocol — PG 기반 에이전트 간 소통 규격
+# PGF Agent Protocol — PG-Based Inter-Agent Communication Specification
 
-> 에이전트를 파견할 때 자연어 프롬프트 대신 **PG 명세**를 전달한다.
-> AI가 AI에게 태스크를 위임할 때의 공통 언어.
+> When dispatching an agent, pass a **PG specification** instead of a natural-language prompt.
+> This is the shared language for AI-to-AI task delegation.
 
 ---
 
-## 1. 왜 PG로 소통하는가
+## 1. Why Communicate in PG
 
-| 자연어 프롬프트 | PG 태스크 명세 |
+| Natural-language prompt | PG task specification |
 |---|---|
-| 의도가 모호할 수 있음 | `def` 시그니처로 입출력 명확 |
-| 검증 기준이 암묵적 | `acceptance_criteria` 내장 |
-| 실행 순서가 산문에 묻힘 | `@dep:`, `→`로 구조화 |
-| 실패 대응 불명확 | Failure Strategy 명시 |
-| 결과 형식 불통일 | `-> ReturnType`으로 반환 계약 |
+| Intent can be ambiguous | Inputs/outputs are explicit via `def` signature |
+| Verification criteria are implicit | `acceptance_criteria` is built in |
+| Execution order is buried in prose | Structured via `@dep:`, `→` |
+| Failure handling is unclear | Failure Strategy is explicit |
+| Result format is inconsistent | Return contract via `-> ReturnType` |
 
-PG로 소통하면:
-- **파견 AI**가 의도를 정확히 전달
-- **수행 AI**가 acceptance_criteria로 자기 검증 가능
-- **결과**가 타입화되어 통합이 용이
+Communicating in PG means:
+- The **dispatching AI** conveys intent precisely
+- The **executing AI** can self-verify against acceptance_criteria
+- The **result** is typed, making integration easy
 
 ---
 
-## 2. TaskSpec — 에이전트 파견 명세 형식
+## 2. TaskSpec — Agent Dispatch Specification Format
 
-에이전트에게 전달하는 태스크를 다음 PG 구조로 작성한다:
+Write the task you hand to an agent in the following PG structure:
 
 ```python
 def task_name(
-    # 입력 파라미터 — 수행에 필요한 모든 컨텍스트
+    # input parameters — all context needed for execution
     target_crate: Path,
-    existing_pattern: Path,      # 참고할 기존 코드
+    existing_pattern: Path,      # existing code to reference
     workspace_root: Path = "D:\\project\\ocwr",
 ) -> TaskResult:
-    """한 줄 태스크 설명"""
+    """One-line task description"""
 
-    # context: (수행 AI가 먼저 읽어야 할 파일/정보)
+    # context: (files/info the executing AI must read first)
     #   - Read(target_crate / "src/lib.rs")
     #   - Read(existing_pattern)
 
     # steps:
-    #   1. 기존 패턴 분석
-    #   2. 새 모듈 구현
-    #   3. 테스트 작성
+    #   1. Analyze the existing pattern
+    #   2. Implement the new module
+    #   3. Write tests
     #   4. cargo check + clippy
 
     # implementation:
@@ -51,12 +51,12 @@ def task_name(
     # acceptance_criteria:
     #   - cargo check -p {crate} → 0 errors
     #   - cargo clippy -p {crate} -- -D warnings → 0 warnings
-    #   - tests >= N개
-    #   - 기존 테스트 불변
+    #   - tests >= N
+    #   - existing tests unchanged
 
     # failure_strategy:
-    #   - 컴파일 에러 → AI_fix_compile_error(error_msg)
-    #   - clippy 경고 → AI_fix_clippy_warning(warning_msg)
+    #   - compile error → AI_fix_compile_error(error_msg)
+    #   - clippy warning → AI_fix_clippy_warning(warning_msg)
     #   - max_retry: 3
 
     # return:
@@ -68,48 +68,48 @@ def task_name(
     #   }
 ```
 
-### 필수 섹션
+### Required Sections
 
-| 섹션 | 역할 | 필수 |
+| Section | Role | Required |
 |---|---|---|
-| `def` 시그니처 | 입력 파라미터 + 반환 타입 | ✅ |
-| `"""docstring"""` | 한 줄 태스크 설명 | ✅ |
-| `# context:` | 수행 전 읽어야 할 파일 | ✅ |
-| `# acceptance_criteria:` | 완료 판정 기준 | ✅ |
-| `# steps:` | 실행 순서 (선택적) | ○ |
-| `# implementation:` | 핵심 로직 (AI_ 또는 실제 코드) | ○ |
-| `# failure_strategy:` | 실패 시 대응 | ○ |
-| `# return:` | 결과 구조 | ○ |
+| `def` signature | Input parameters + return type | ✅ |
+| `"""docstring"""` | One-line task description | ✅ |
+| `# context:` | Files to read before execution | ✅ |
+| `# acceptance_criteria:` | Completion criteria | ✅ |
+| `# steps:` | Execution order (optional) | ○ |
+| `# implementation:` | Core logic (`AI_` or actual code) | ○ |
+| `# failure_strategy:` | Handling on failure | ○ |
+| `# return:` | Result structure | ○ |
 
 ---
 
-## 3. 병렬 파견 — [parallel] TaskSpec
+## 3. Parallel Dispatch — [parallel] TaskSpec
 
-여러 에이전트를 동시 파견할 때:
+When dispatching multiple agents simultaneously:
 
 ```python
 [parallel]
 
 def implement_discord_adapter(channels: Path) -> AdapterResult:
-    """Discord REST API 어댑터"""
+    """Discord REST API adapter"""
     # context: Read(channels / "adapters/slack.rs")
     # acceptance_criteria: cargo check, tests >= 10
 
 def implement_slack_adapter(channels: Path) -> AdapterResult:
-    """Slack Web API 어댑터"""
-    # context: Read(channels / "adapters/discord.rs")  # 먼저 완성된 것 참조
+    """Slack Web API adapter"""
+    # context: Read(channels / "adapters/discord.rs")  # reference the one completed first
     # acceptance_criteria: cargo check, tests >= 10
 
 def implement_telegram_adapter(channels: Path) -> AdapterResult:
-    """Telegram Bot API 어댑터"""
+    """Telegram Bot API adapter"""
     # context: Read(channels / "adapter.rs")
     # acceptance_criteria: cargo check, tests >= 10
 
 [/parallel]
 
-# 통합 검증 — 모든 병렬 태스크 완료 후
+# integration verification — after all parallel tasks complete
 def verify_all_adapters(workspace: Path) -> VerifyResult:
-    """전체 어댑터 통합 검증"""
+    """Integration verification of all adapters"""
     # @dep: implement_discord_adapter, implement_slack_adapter, implement_telegram_adapter
     cargo_check(workspace, "--workspace")
     cargo_test(workspace, "-p ocwr_channels")
@@ -117,19 +117,19 @@ def verify_all_adapters(workspace: Path) -> VerifyResult:
 
 ---
 
-## 4. 의존 체인 파견 — @dep TaskSpec
+## 4. Dependency-Chain Dispatch — @dep TaskSpec
 
-순서가 있는 태스크 위임:
+Delegating ordered tasks:
 
 ```python
 def expand_adapter_traits(channels: Path) -> TraitResult:
-    """채널 어댑터 인터페이스 7종 추가"""
+    """Add 7 channel adapter interfaces"""
     # acceptance_criteria: AdapterKind.TOTAL == 16
 
 def implement_adapters(channels: Path) -> list[AdapterResult]:
-    """6종 채널 어댑터 구현"""
+    """Implement 6 channel adapters"""
     # @dep: expand_adapter_traits
-    # ↑ trait 확장이 완료된 후에만 실행
+    # ↑ run only after the trait expansion is complete
     [parallel]
     AI_implement("discord")
     AI_implement("slack")
@@ -139,12 +139,12 @@ def implement_adapters(channels: Path) -> list[AdapterResult]:
 
 ---
 
-## 5. 결과 보고 형식 — TaskResult
+## 5. Result Reporting Format — TaskResult
 
-수행 AI가 반환하는 결과도 PG 구조를 따른다:
+The result returned by the executing AI also follows a PG structure:
 
 ```python
-# 성공 결과
+# success result
 TaskResult = {
     "status": "done",
     "files_created": ["src/adapters/discord.rs"],
@@ -158,7 +158,7 @@ TaskResult = {
     },
 }
 
-# 실패 결과
+# failure result
 TaskResult = {
     "status": "blocked",
     "blocker": "reqwest crate not in workspace dependencies",
@@ -169,22 +169,22 @@ TaskResult = {
 
 ---
 
-## 6. Orchestrator → Agent 흐름
+## 6. Orchestrator → Agent Flow
 
-PGF의 execute 단계에서 `[parallel]` 블록을 만나면:
+When PGF's execute phase encounters a `[parallel]` block:
 
 ```python
 def orchestrate_parallel_block(nodes: list[GantreeNode], design: Path):
-    """[parallel] 블록의 노드들을 에이전트로 파견"""
+    """Dispatch the nodes of a [parallel] block as agents"""
 
     for node in nodes:
-        # 1. 노드의 PPR def 또는 # 주석에서 TaskSpec 추출
+        # 1. Extract the TaskSpec from the node's PPR def or # comments
         task_spec = extract_task_spec(node, design)
 
-        # 2. PG 형식의 TaskSpec을 에이전트 프롬프트로 전달
+        # 2. Pass the PG-format TaskSpec as the agent prompt
         agent_prompt = format_pg_task_spec(task_spec)
 
-        # 3. Agent 도구로 파견
+        # 3. Dispatch via the Agent tool
         Agent(
             prompt=agent_prompt,
             name=node.name,
@@ -192,19 +192,19 @@ def orchestrate_parallel_block(nodes: list[GantreeNode], design: Path):
             run_in_background=True,
         )
 
-    # 4. 모든 에이전트 완료 대기
-    # 5. 각 에이전트의 TaskResult 수집
-    # 6. acceptance_criteria 교차 검증
+    # 4. Wait for all agents to complete
+    # 5. Collect each agent's TaskResult
+    # 6. Cross-verify acceptance_criteria
 ```
 
-### PG TaskSpec → Agent 프롬프트 변환 규칙
+### PG TaskSpec → Agent Prompt Conversion Rules
 
 ```python
 def format_pg_task_spec(spec: TaskSpec) -> str:
-    """PG TaskSpec을 에이전트가 이해할 프롬프트로 변환
+    """Convert a PG TaskSpec into a prompt the agent can understand
 
-    핵심: PG 구조를 유지하면서 실행 가능한 지시로 변환.
-    자연어 설명은 최소화하고, PG 명세가 지시의 본체.
+    Key: convert into executable instructions while preserving the PG structure.
+    Minimize natural-language explanation; the PG specification is the body of the instruction.
     """
     prompt = f"""You are executing a PG TaskSpec.
 
@@ -226,9 +226,9 @@ def format_pg_task_spec(spec: TaskSpec) -> str:
 
 ---
 
-## 7. 실전 예시 — 이전 세션의 자연어 → PG 변환
+## 7. Worked Example — Natural Language → PG Conversion from a Previous Session
 
-### Before (자연어 프롬프트)
+### Before (natural-language prompt)
 
 ```
 Implement a Discord channel adapter for the OCWR Rust project at D:\openclaw\ocwr.
@@ -244,12 +244,12 @@ Add unit tests, run cargo check, run clippy...
 def implement_discord_adapter(
     channels_crate: Path = "D:\\openclaw\\ocwr\\crates\\ocwr_channels",
 ) -> AdapterResult:
-    """Discord REST API 채널 어댑터 구현"""
+    """Implement Discord REST API channel adapter"""
 
     # context:
-    #   - Read(channels_crate / "src/adapter.rs")      # trait 타입 확인
-    #   - Read(channels_crate / "src/adapters/mod.rs")  # 등록 패턴
-    #   - Read(channels_crate / "src/message.rs")       # 메시지 타입
+    #   - Read(channels_crate / "src/adapter.rs")      # check trait types
+    #   - Read(channels_crate / "src/adapters/mod.rs")  # registration pattern
+    #   - Read(channels_crate / "src/message.rs")       # message types
 
     # implementation:
     adapter = DiscordAdapter(
@@ -282,41 +282,41 @@ def implement_discord_adapter(
     #   AdapterResult = {files_created, files_modified, test_count, summary}
 ```
 
-**차이**: 자연어 17줄 → PG 35줄이지만, **의도 명확성, 검증 가능성, 실패 대응**이 구조적으로 내장됨.
+**Difference**: natural language 17 lines → PG 35 lines, but **intent clarity, verifiability, and failure handling** are structurally built in.
 
 ---
 
-## 8. 적용 규칙
+## 8. Application Rules
 
-### PGF execute 단계에서의 적용
+### Application in the PGF execute Phase
 
-1. **`[parallel]` 블록의 노드를 에이전트로 파견할 때**: 자연어 대신 PG TaskSpec 사용
-2. **단일 노드를 에이전트로 파견할 때** (규모가 커서): PG TaskSpec 사용
-3. **직접 실행할 때** (규모가 작아서): TaskSpec 불필요, PPR def 직접 해석/실행
+1. **When dispatching the nodes of a `[parallel]` block as agents**: use a PG TaskSpec instead of natural language
+2. **When dispatching a single node as an agent** (because it is large): use a PG TaskSpec
+3. **When executing directly** (because it is small): no TaskSpec needed — interpret/execute the PPR def directly
 
-### PG TaskSpec 사용 판단 기준
+### Criteria for Deciding to Use a PG TaskSpec
 
-| 상황 | TaskSpec 사용 |
+| Situation | Use TaskSpec |
 |---|---|
-| 직접 실행 (15분 이내) | ❌ 직접 실행 |
-| 에이전트 파견 (단순 작업) | ○ 간략 TaskSpec |
-| 에이전트 파견 (복잡 작업) | ✅ 완전 TaskSpec |
-| 다중 에이전트 병렬 파견 | ✅ 필수 — 결과 통합에 타입 계약 필요 |
+| Direct execution (within 15 minutes) | ❌ direct execution |
+| Agent dispatch (simple task) | ○ brief TaskSpec |
+| Agent dispatch (complex task) | ✅ full TaskSpec |
+| Parallel dispatch of multiple agents | ✅ required — type contracts needed for result integration |
 
-### 에이전트 수행 후 결과 통합
+### Integrating Results After Agent Execution
 
 ```python
 def integrate_agent_results(results: list[TaskResult]) -> IntegrationResult:
-    """병렬 에이전트 결과 통합 + 교차 검증"""
+    """Integrate parallel agent results + cross-verify"""
 
-    # 1. 모든 에이전트가 acceptance_criteria 충족 확인
+    # 1. Confirm all agents met acceptance_criteria
     failed = [r for r in results if r["status"] != "done"]
     if failed:
         AI_handle_failures(failed)
 
-    # 2. workspace 전체 통합 검증
+    # 2. Workspace-wide integration verification
     cargo_check("--workspace")
 
-    # 3. 상호 의존성 검증 (에이전트 A의 결과가 에이전트 B에 영향?)
+    # 3. Cross-dependency verification (does agent A's result affect agent B?)
     AI_verify_cross_dependencies(results)
 ```

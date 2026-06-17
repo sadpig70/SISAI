@@ -1,37 +1,37 @@
 # WORKPLAN-SISAI @v:0.1
 
-> 설계: `.pgf/DESIGN-SISAI.md`. 목표: 자기완결(HELIX 독립) self-improvement security AI.
-> 계승: HELIX 백본 패턴(결정론 stdlib). 고유: 채널 자기확장 + 외부우선-자체설계 + triage.
+> Design: `.pgf/DESIGN-SISAI.md`. Goal: a self-contained (HELIX-independent) self-improvement security AI.
+> Inherited: HELIX backbone pattern (deterministic stdlib). Specific: channel self-expansion + external-first-then-self-design + triage.
 
 ## POLICY
 ```yaml
-preserve_determinism: true     # core stdlib; now만 주입
-self_contained: true            # SISAI 폴더만으로 구동; HELIX import 0
-defensive_only: true            # 무기화 산출 차단
+preserve_determinism: true     # core stdlib; only now injected
+self_contained: true            # runs from the SISAI folder alone; zero HELIX imports
+defensive_only: true            # block weaponized output
 verify_each: true
 ```
 
-## 배치 (의존 순서)
+## Batches (dependency order)
 ```text
-B0 Fingerprint        (designing)  core/sisai_fingerprint.py — 정규화·지문
+B0 Fingerprint        (designing)  core/sisai_fingerprint.py — normalization·fingerprint
 B1 Io+Schema          (designing) @dep:B0  atomic write + JSON-Schema-subset checker
-B2 Channels           (designing) @dep:B0,B1  ★ 채널 레지스트리(발굴·기록·재사용)
-B3 Ledger             (designing) @dep:B0  위협/방어/채널 재사용 게이트
-B4 Diversity+Triage   (designing) @dep:B0  커버리지(사각지대) + severity×recency
-B5 Provenance         (designing) @dep:B0  위협→방어 계보 + 검증방어→코퍼스 환류
-B6 Loop               (designing) @dep:B4  next_action(3가닥) + SolveOrDesign 정책
-B7 Engines            (designing) @dep:B3,B5  threat/defense/channel 어댑터
+B2 Channels           (designing) @dep:B0,B1  ★ channel registry (discover·record·reuse)
+B3 Ledger             (designing) @dep:B0  threat/defense/channel reuse gate
+B4 Diversity+Triage   (designing) @dep:B0  coverage (blind spots) + severity×recency
+B5 Provenance         (designing) @dep:B0  threat→defense lineage + verified-defense→corpus feedback
+B6 Loop               (designing) @dep:B4  next_action (3 strands) + SolveOrDesign policy
+B7 Engines            (designing) @dep:B3,B5  threat/defense/channel adapters
 B8 Driver             (designing) @dep:B2,B6,B7  sisai.py status/discover/record/loop-status
-B9 Schemas+Seed       (designing) @dep:B1  계약 5종 + 요약.md → taxonomy/defense/channel 시드
-B10 Validate          (designing) @dep:all  구조+계약 검증기
+B9 Schemas+Seed       (designing) @dep:B1  5 contracts + summary.md → taxonomy/defense/channel seed
+B10 Validate          (designing) @dep:all  structure+contract validator
 B11 Docs              (designing)  README/RUNBOOK/ARCHITECTURE/SELF-DEFENSE/INSTRUCTIONS
-B12 Tests             (designing) @dep:all  결정론 unittest (채널/ledger/triage/loop/io/schema/provenance/self-defense)
-B13 Verify            (needs-verify) @dep:all  unittest+validate+status+결정론 2회
+B12 Tests             (designing) @dep:all  deterministic unittest (channel/ledger/triage/loop/io/schema/provenance/self-defense)
+B13 Verify            (needs-verify) @dep:all  unittest+validate+status+deterministic 2 runs
 ```
 
-## 검증 게이트
+## Verification gate
 ```text
-- unittest discover OK (결정론 2회 동일) · validate PASS · status 정상
-- core: 시계·난수·네트워크·AI·HELIX import 0 · 자기완결(폴더만으로 구동)
-- 채널 idempotent · 외부우선 · 방어 환류는 검증 후 · 인젝션 방어 테스트 통과
+- unittest discover OK (deterministic, identical across 2 runs) · validate PASS · status normal
+- core: zero clock/RNG/network/AI/HELIX imports · self-contained (runs from the folder alone)
+- channel idempotent · external-first · defense feedback only after verification · injection-defense test passes
 ```

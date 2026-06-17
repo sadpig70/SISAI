@@ -16,10 +16,10 @@ from pathlib import Path
 
 # Korean status normalization
 KO_STATUS = {
-    "\uc644\ub8cc": "done",         # 완료
-    "\uc9c4\ud589\uc911": "in_progress",  # 진행중
-    "\uc124\uacc4\uc911": "pending",      # 설계중
-    "\ubcf4\ub958": "blocked",            # 보류
+    "\uc644\ub8cc": "done",         # done
+    "\uc9c4\ud589\uc911": "in_progress",  # in progress
+    "\uc124\uacc4\uc911": "pending",      # designing
+    "\ubcf4\ub958": "blocked",            # on hold
 }
 
 def normalize_status(s):

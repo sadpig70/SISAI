@@ -2,105 +2,109 @@
 
 # SISAI — Self-improvement Security AI
 
-> **보안/안전 채널을 스스로 발굴·확장하며 해킹 방법·사례를 수집하고,
-> 해결책을 외부에서 우선 탐색 → 없으면 pgf로 자체 설계해, 감지/방지 방어를
-> 복리로 키워가는 자기개선 보안 AI.**
+> **A self-improving security AI that discovers and expands its own security/safety
+> channels, collects hacking methods and cases, searches externally first for solutions
+> → designs them itself with pgf when none exist, and compounds its detection/prevention
+> defenses over time.**
 
-SISAI는 정보를 입수할 **채널 자체를 시스템이 확장**하고, 채널·위협·방어를 **기록하고
-재사용**합니다(단일 출처 백본). 구동 엔진은 **AI 런타임**이며, 표기·실행 프레임워크로
-`skills/{pg,pgf,pgxf}`를 **프로젝트 안에 vendor**해 **SISAI 폴더만으로 자기완결**로 돕니다.
-HELIX의 explore⊕exploit 나선 *패턴*을 계승하되 **코드 의존은 0 — HELIX와 완전 독립**입니다.
+SISAI lets **the system itself expand the channels** through which it obtains information,
+and it **records and reuses** channels, threats, and defenses (single-source backbone). The
+driving engine is the **AI runtime**, and as its notation/execution framework it **vendors**
+`skills/{pg,pgf,pgxf}` **inside the project** so it runs **self-contained from the SISAI
+folder alone**. It inherits HELIX's explore⊕exploit spiral *pattern* but has **zero code
+dependency — fully independent of HELIX**.
 
-## 세 가닥 (3 strands) + 백본
+## Three strands (3 strands) + backbone
 
 <p align="center">
-  <img src="assets/sisai-strands.svg" alt="SISAI 세 가닥(가닥 A ThreatIntel 채널 스캔→위협 수집, 가닥 B DefenseSynth 외부 탐색→없으면 자체설계, 가닥 C DetectOps 탐지 규칙/리포트 운영)이 단일 결정론 백본(core/ — channels·ledger·diversity·triage·provenance·loop)으로 수렴하고, 검증된 방어가 코퍼스로 환류(염기쌍)되어 다음 턴이 복리로 더 나은 방어를 합성하는 수렴 없는 나선" width="92%">
+  <img src="assets/sisai-strands.svg" alt="SISAI three strands (strand A ThreatIntel channel scan → threat collection, strand B DefenseSynth external search → design itself if none found, strand C DetectOps detection-rule/report operations) converge into a single deterministic backbone (core/ — channels·ledger·diversity·triage·provenance·loop), and verified defenses feed back into the corpus (base pairs) so that the next turn compounds into synthesizing better defenses — a non-converging spiral" width="92%">
 </p>
 
-<details><summary>같은 그림 (텍스트)</summary>
+<details><summary>Same diagram (text)</summary>
 
 ```
-   가닥 A (ThreatIntel)        가닥 B (DefenseSynth)        가닥 C (DetectOps)
-   채널 스캔 → 위협 수집        외부 탐색 → 없으면 자체설계      탐지 규칙/리포트 운영
+   Strand A (ThreatIntel)      Strand B (DefenseSynth)       Strand C (DetectOps)
+   channel scan → threat       external search → design       detection-rule/report
+   collection                  itself if none found           operations
         \                          |                          /
-         \        백본(core/) — 단일 출처 결정론 substrate     /
+         \        backbone (core/) — single-source deterministic substrate     /
           \  channels·ledger·diversity·triage·provenance·loop /
-   검증된 방어 → 코퍼스 환류(염기쌍) → 다음 턴이 복리로 더 나은 방어 합성 (수렴 없는 나선)
+   verified defenses → corpus feedback (base pairs) → next turn compounds into synthesizing better defenses (non-converging spiral)
 ```
 
 </details>
 
-- **채널은 1급 자산**: 발굴(discover) → 기록(ledger) → 재사용(reuse). 고정 목록이 아니다.
-- **외부 우선 → 자체 설계**: 해결책은 외부 코퍼스에서 먼저 찾고, 없으면 pgf full-cycle로 만든다.
-- **triage**: CVSS × 최신성으로 *무엇을 먼저 막을지* 결정 (보안 고유 차원).
-- **diversity**: 공격표면 커버리지로 *사각지대(blind spot)* 를 감시.
+- **Channels are first-class assets**: discover → ledger → reuse. Not a fixed list.
+- **External first → design itself**: solutions are searched first in the external corpus, and if none exist they are built with the pgf full-cycle.
+- **triage**: decides *what to block first* by CVSS × recency (a security-specific dimension).
+- **diversity**: watches for *blind spots* via attack-surface coverage.
 
-## 결정론 경계 (= 1차 인젝션 방어)
+## Deterministic boundary (= first-line injection defense)
 
-- **`core/` = 순수 결정론**: stdlib only, 시계·네트워크·AI·난수 없음(`now` 주입).
-  **수집한 외부 텍스트는 core의 제어 흐름을 바꿀 수 없다** → 프롬프트 인젝션 1차 차단.
-- **AI 메타층** = 실제 채널 발견·위협 이해·방어 설계 (skills/AI 런타임). core 밖.
-- **defensive-only**: 산출은 탐지/방지/리포트. 작동 익스플로잇 무기화·표적공격 자동화는 **범위 밖**.
+- **`core/` = pure determinism**: stdlib only, no clock/network/AI/randomness (`now` injected).
+  **Collected external text cannot change core's control flow** → first-line prompt-injection blocking.
+- **AI meta-layer** = actual channel discovery, threat understanding, defense design (skills/AI runtime). Outside core.
+- **defensive-only**: outputs are detection/prevention/reports. Weaponizing working exploits or automating targeted attacks is **out of scope**.
 
-## 빠른 시작
+## Quick start
 
 ```bash
-# 한 턴 상태 (읽기) — 채널/위협/triage/방어계획/다음액션
+# One-turn status (read) — channels/threats/triage/defense-plan/next-action
 python sisai.py status --now 2026-06-17
 
-# 최우선 위협의 방어 조달 전략 (외부 우선 / 없으면 자체설계)
+# Defense procurement strategy for the top-priority threat (external first / design itself if none)
 python sisai.py plan --now 2026-06-17
 
-# 새 채널 발굴·기록 (재사용 — idempotent)
+# Discover and record a new channel (reuse — idempotent)
 python sisai.py discover-channel --channel ch.json --registry .sisai/channels.json
 
-# ★ 고리 닫기: 검증된 방어를 ledger에 기록 + 코퍼스 환류(염기쌍). idempotent.
+# ★ Close the loop: record a verified defense to the ledger + corpus feedback (base pairs). idempotent.
 python sisai.py record-defense --defense def.json --ledger .sisai/ledger.json --corpus .sisai/corpus.json
 
-# RUN_THREAT_INTEL: 스캔한 새 위협 적재 (schema 검증 · dedup · data-only). idempotent.
+# RUN_THREAT_INTEL: load newly scanned threats (schema validation · dedup · data-only). idempotent.
 python sisai.py ingest-threats --threats new_threats.json --ledger .sisai/ledger.json
 
-# 구조·계약 검증 / 방어층 일괄 검증 / 테스트
-python core/sisai_validate.py .                       # 구조 + seed 계약
-python core/sisai_validate.py . --integrity --live    # 스킬 무결성 + .sisai 런타임 상태
-python defenses/verify_all.py                         # 10개 방어 suite 일괄 (recall/precision 요약)
+# Structure/contract validation / batch defense-layer validation / tests
+python core/sisai_validate.py .                       # structure + seed contract
+python core/sisai_validate.py . --integrity --live    # skill integrity + .sisai runtime state
+python defenses/verify_all.py                         # batch of 10 defense suites (recall/precision summary)
 python -m unittest discover -s tests -q
 ```
 
-> **현황**: DefenseSweep 완료 — 시드 위협 10종 전부 방어(ledger 환류), 채널 9종(누락 kinds 없음).
-> 다음 단계는 `RUN_THREAT_INTEL`(새 위협 수집 → `ingest-threats`로 적재).
+> **Status**: DefenseSweep complete — all 10 seed threats defended (ledger feedback), 9 channels (no missing kinds).
+> The next step is `RUN_THREAT_INTEL` (collect new threats → load with `ingest-threats`).
 
-## 구조
+## Structure
 
 ```
 SISAI/
-├── sisai.py            # 드라이버 (status / plan / discover-channel / record-defense)
-├── core/               # ★ 백본 (stdlib, 결정론) — HELIX 독립
-│   ├── sisai_fingerprint.py  # 채널/위협/방어 식별 지문
-│   ├── sisai_channels.py     # ★ 채널 레지스트리 — 발굴·기록·재사용 (자기확장)
-│   ├── sisai_ledger.py       # 위협/방어 재사용 게이트
-│   ├── sisai_triage.py       # severity×recency 우선순위 + 커버리지(사각지대)
-│   ├── sisai_provenance.py   # 위협→방어 계보 + 검증방어→코퍼스 환류
-│   ├── sisai_loop.py         # next_action(3가닥) + plan_defense(외부우선)
-│   ├── sisai_io.py           # atomic crash-safe 쓰기
-│   ├── sisai_schema.py       # JSON-Schema-subset 계약 검사기
-│   └── sisai_validate.py     # 구조·계약 검증
-├── engines/adapters.py # native 산출 → 백본 투영 (pure)
-├── skills/{pg,pgf,pgxf}# vendored — AI 런타임 구동 엔진 (자기완결)
-├── schemas/            # 계약 5종 (channel/threat/defense/ledger/loop-state)
-├── seed/               # 시드 코퍼스 (요약.md → taxonomy/defense/channel)
+├── sisai.py            # driver (status / plan / discover-channel / record-defense)
+├── core/               # ★ backbone (stdlib, deterministic) — HELIX-independent
+│   ├── sisai_fingerprint.py  # channel/threat/defense identity fingerprints
+│   ├── sisai_channels.py     # ★ channel registry — discover·record·reuse (self-expanding)
+│   ├── sisai_ledger.py       # threat/defense reuse gate
+│   ├── sisai_triage.py       # severity×recency priority + coverage (blind spots)
+│   ├── sisai_provenance.py   # threat→defense lineage + verified-defense→corpus feedback
+│   ├── sisai_loop.py         # next_action (3 strands) + plan_defense (external first)
+│   ├── sisai_io.py           # atomic crash-safe writes
+│   ├── sisai_schema.py       # JSON-Schema-subset contract checker
+│   └── sisai_validate.py     # structure/contract validation
+├── engines/adapters.py # native output → backbone projection (pure)
+├── skills/{pg,pgf,pgxf}# vendored — AI-runtime driving engines (self-contained)
+├── schemas/            # 5 contracts (channel/threat/defense/ledger/loop-state)
+├── seed/               # seed corpus (summary.md → taxonomy/defense/channel)
 ├── docs/               # ARCHITECTURE · SELF-DEFENSE · INSTRUCTIONS · RUNBOOK
-├── examples/           # 샘플 상태
-└── tests/              # 결정론 unittest
+├── examples/           # sample state
+└── tests/              # deterministic unittest
 ```
 
-## 더 보기
-`RUNBOOK.md`(전 기능 호출) · `docs/ARCHITECTURE.md`(3가닥↔구현) ·
-`docs/SELF-DEFENSE.md`(SISAI 자기방어) · `docs/INSTRUCTIONS-sisai-cycle.md`(문서만 읽고 자율 한 턴).
+## See more
+`RUNBOOK.md` (all-feature invocation) · `docs/ARCHITECTURE.md` (3 strands ↔ implementation) ·
+`docs/SELF-DEFENSE.md` (SISAI self-defense) · `docs/INSTRUCTIONS-sisai-cycle.md` (one autonomous turn reading docs only).
 
-## 라이선스
+## License
 [MIT](LICENSE) © 2026 Jung Wook Yang.
 
-> **의지**: AI를 악용한 해킹·보안/안전 침해를 **탐색·방지하고 안전·보안을 앞당기기 위해**
-> 누구나 자유롭게 쓰고 기여할 수 있도록 MIT로 공개한다. 이 소프트웨어는 **defensive-only**다
-> — 탐지·방지·리포트가 목적이며, 무기화(작동 익스플로잇·표적공격 자동화·탐지회피)는 범위 밖이다.
+> **Intent**: To **search for and prevent AI-abused hacking and security/safety breaches and to bring safety/security forward**,
+> this is released under MIT so anyone can freely use and contribute. This software is **defensive-only**
+> — its purpose is detection/prevention/reports, and weaponization (working exploits · automated targeted attacks · detection evasion) is out of scope.

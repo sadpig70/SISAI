@@ -1,10 +1,10 @@
 # PGXF Index Format Specification
 
-> INDEX-{Name}.json과 MANIFEST.json의 상세 스키마 및 필드별 규칙.
+> Detailed schema and per-field rules for INDEX-{Name}.json and MANIFEST.json.
 
 ---
 
-## 1. INDEX-{Name}.json 전체 스키마
+## 1. Full INDEX-{Name}.json Schema
 
 ```json
 {
@@ -59,51 +59,51 @@
 
 ---
 
-## 2. 필드별 규칙
+## 2. Per-Field Rules
 
-### 프로젝트 레벨
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `pgxf_version` | str | ✅ | PGXF 스키마 버전 ("1.0") |
-| `project` | str | ✅ | CamelCase 프로젝트명 |
-| `files` | list[str] | ✅ | 스캔된 소스 파일 목록 (상대 경로) |
-| `nodes` | dict[str, IndexEntry] | ✅ | 노드명 → IndexEntry 매핑 |
-| `summary` | dict[str, int] | ✅ | 상태별 집계 |
-| `decomposed_links` | list[DecomposedLink] | ✅ | (decomposed) 크로스 참조 목록 |
-| `built_at` | str (ISO8601) | ✅ | 최초 빌드 시각 |
-| `updated_at` | str (ISO8601) | ✅ | 마지막 갱신 시각 |
-
-### IndexEntry 필드
+### Project Level
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `node` | str | ✅ | CamelCase 노드 식별자 (프로젝트 내 유일) |
-| `status` | str | ✅ | PG/PGF 상태 코드 |
-| `file` | str | ✅ | 소속 파일 상대 경로 |
-| `line` | int | ✅ | 파일 내 시작 줄 (1-based) |
-| `depth` | int | ✅ | 트리 깊이 (root = 0) |
-| `parent` | str \| null | ✅ | 부모 노드명 (root는 null) |
-| `children` | list[str] | ✅ | 직계 자식 노드명 (빈 list 허용) |
-| `deps` | list[str] | ✅ | @dep: 의존성 목록 (빈 list 허용) |
-| `has_ppr` | bool | ✅ | PPR def 블록 존재 여부 |
-| `ppr_file` | str \| null | ❌ | PPR def 소속 파일 (has_ppr=true 시 필수) |
-| `ppr_line` | int \| null | ❌ | PPR def 시작 줄 (has_ppr=true 시 필수) |
-| `decomposed_to` | str \| null | ❌ | 분리된 트리 파일 경로 (status=decomposed 시 필수) |
-| `tags` | list[str] | ✅ | #tag 목록 (빈 list 허용) |
+| `pgxf_version` | str | ✅ | PGXF schema version ("1.0") |
+| `project` | str | ✅ | CamelCase project name |
+| `files` | list[str] | ✅ | list of scanned source files (relative paths) |
+| `nodes` | dict[str, IndexEntry] | ✅ | node name → IndexEntry mapping |
+| `summary` | dict[str, int] | ✅ | aggregation by status |
+| `decomposed_links` | list[DecomposedLink] | ✅ | list of (decomposed) cross-references |
+| `built_at` | str (ISO8601) | ✅ | initial build timestamp |
+| `updated_at` | str (ISO8601) | ✅ | last update timestamp |
 
-### DecomposedLink 필드
+### IndexEntry Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `source_node` | str | ✅ | (decomposed) 마킹된 원본 노드명 |
-| `source_file` | str | ✅ | 원본 파일 경로 |
-| `target_file` | str | ✅ | 분리된 트리 파일 경로 |
-| `target_root` | str | ✅ | 분리된 트리의 루트 노드명 |
+| `node` | str | ✅ | CamelCase node identifier (unique within the project) |
+| `status` | str | ✅ | PG/PGF status code |
+| `file` | str | ✅ | containing file relative path |
+| `line` | int | ✅ | starting line within the file (1-based) |
+| `depth` | int | ✅ | tree depth (root = 0) |
+| `parent` | str \| null | ✅ | parent node name (null for root) |
+| `children` | list[str] | ✅ | direct child node names (empty list allowed) |
+| `deps` | list[str] | ✅ | @dep: dependency list (empty list allowed) |
+| `has_ppr` | bool | ✅ | whether a PPR def block exists |
+| `ppr_file` | str \| null | ❌ | file containing the PPR def (required when has_ppr=true) |
+| `ppr_line` | int \| null | ❌ | PPR def starting line (required when has_ppr=true) |
+| `decomposed_to` | str \| null | ❌ | split tree file path (required when status=decomposed) |
+| `tags` | list[str] | ✅ | list of #tags (empty list allowed) |
+
+### DecomposedLink Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `source_node` | str | ✅ | original node name marked (decomposed) |
+| `source_file` | str | ✅ | original file path |
+| `target_file` | str | ✅ | split tree file path |
+| `target_root` | str | ✅ | root node name of the split tree |
 
 ---
 
-## 3. MANIFEST.json 전체 스키마
+## 3. Full MANIFEST.json Schema
 
 ```json
 {
@@ -139,73 +139,73 @@
 }
 ```
 
-### MANIFEST 프로젝트 엔트리
+### MANIFEST Project Entry
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | str | ✅ | 프로젝트명 |
-| `index` | str | ✅ | INDEX 파일 경로 |
-| `design` | str \| null | ✅ | DESIGN 파일 경로 (없으면 null) |
-| `workplan` | str \| null | ❌ | WORKPLAN 파일 경로 |
-| `total_nodes` | int | ✅ | 전체 노드 수 |
-| `done` | int | ✅ | 완료 노드 수 |
-| `completion_pct` | float | ✅ | 완료율 (소수점 1자리) |
-| `status_summary` | dict[str, int] | ✅ | 상태별 집계 |
-| `blocked_nodes` | list[str] | ❌ | blocked 노드 목록 (빠른 확인용) |
-| `decomposed_files` | list[str] | ❌ | decomposed 분리 파일 목록 |
+| `name` | str | ✅ | project name |
+| `index` | str | ✅ | INDEX file path |
+| `design` | str \| null | ✅ | DESIGN file path (null if absent) |
+| `workplan` | str \| null | ❌ | WORKPLAN file path |
+| `total_nodes` | int | ✅ | total number of nodes |
+| `done` | int | ✅ | number of completed nodes |
+| `completion_pct` | float | ✅ | completion rate (1 decimal place) |
+| `status_summary` | dict[str, int] | ✅ | aggregation by status |
+| `blocked_nodes` | list[str] | ❌ | list of blocked nodes (for quick reference) |
+| `decomposed_files` | list[str] | ❌ | list of decomposed split files |
 
 ---
 
-## 4. 노드명 유일성 규칙
+## 4. Node Name Uniqueness Rule
 
-프로젝트 스코프 내에서 노드명은 유일해야 한다.
+Within the project scope, node names must be unique.
 
-### 중복 발생 시 처리
+### Handling Duplicates
 
 ```
 [PGXF] ⚠ DUPLICATE NODE: "ValidateCard"
   → .pgf/DESIGN-OrderSystem.md:12
   → .pgf/DESIGN-PaymentFlow.md:4
-  Action: 첫 번째를 채택, 두 번째에 경고 마킹
-  Fix: 노드명을 OrderValidateCard / PaymentValidateCard로 분리 권장
+  Action: adopt the first, mark the second with a warning
+  Fix: recommend splitting node names into OrderValidateCard / PaymentValidateCard
 ```
 
-### (decomposed) 예외
+### (decomposed) Exception
 
-`(decomposed)` 노드는 원본 파일과 분리된 파일 양쪽에 동일 이름이 존재한다. 이는 중복이 **아니다** — PGXF가 `decomposed_links`로 연결하고, 원본의 엔트리를 대표로 사용한다.
+A `(decomposed)` node has the same name in both the original file and the split file. This is **not** a duplicate — PGXF links them via `decomposed_links` and uses the original's entry as the representative.
 
 ---
 
-## 5. PPR 매칭 규칙
+## 5. PPR Matching Rules
 
-### CamelCase → snake_case 변환
+### CamelCase → snake_case Conversion
 
 ```
 PaymentProcessor    → payment_processor
-AI_ExtractKeywords  → ai_extract_keywords  (인라인 — 매칭 불요)
+AI_ExtractKeywords  → ai_extract_keywords  (inline — matching not required)
 ValidateCard        → validate_card
 SeAAIHub           → se_aai_hub
 ```
 
-### 매칭 우선순위
+### Matching Priority
 
-1. **정확 매칭**: `def payment_processor(` ← `PaymentProcessor`
-2. **접두사 매칭**: `def payment_processor_v2(` ← `PaymentProcessor` (경고 출력)
-3. **매칭 실패**: `has_ppr = false`
+1. **Exact match**: `def payment_processor(` ← `PaymentProcessor`
+2. **Prefix match**: `def payment_processor_v2(` ← `PaymentProcessor` (emits a warning)
+3. **Match failure**: `has_ppr = false`
 
-### PPR 위치 탐색 범위
+### PPR Location Search Scope
 
-1. 동일 파일의 `## PPR` 섹션 (우선)
-2. 동일 프로젝트의 다른 DESIGN 파일
-3. 분리된 `(decomposed)` 파일
+1. The `## PPR` section of the same file (priority)
+2. Other DESIGN files in the same project
+3. The split `(decomposed)` file
 
 ---
 
-## 6. status 값 매핑
+## 6. status Value Mapping
 
-PG 기본 6개 + PGF 확장 3개 = 총 9개 상태:
+PG's 6 base + PGF's 3 extensions = 9 statuses total:
 
-| Status | Origin | summary 키 |
+| Status | Origin | summary key |
 |--------|--------|------------|
 | `done` | PG | `done` |
 | `in-progress` | PG | `in-progress` |
@@ -217,11 +217,11 @@ PG 기본 6개 + PGF 확장 3개 = 총 9개 상태:
 | `awaiting-return` | PGF | `awaiting-return` |
 | `returned` | PGF | `returned` |
 
-summary 집계에서 `decomposed` 노드는 **total에 포함하되 completion 계산에서 제외**한다 (분리된 트리에서 별도 집계).
+In the summary aggregation, `decomposed` nodes are **included in total but excluded from the completion calculation** (aggregated separately in the split tree).
 
 ---
 
-## 7. Sync Diff 출력 포맷
+## 7. Sync Diff Output Format
 
 ```json
 {

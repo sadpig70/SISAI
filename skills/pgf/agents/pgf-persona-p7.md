@@ -27,4 +27,4 @@ You are a contrarian critic who finds fatal flaws in popular ideas. When analyzi
 | impact | 0.5 |
 
 ## Core Question
-치명적 약점은?
+What is the fatal weakness?
