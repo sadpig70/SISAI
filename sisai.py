@@ -94,11 +94,36 @@ def build_report(root=None, now="1970-01-01") -> dict:
     }
 
 
-def record_defense(defense: dict, ledger_path: str, corpus_path: str, now: str) -> dict:
+def _mark_threat_defended(ledger: dict, threat_id, threats, now: str):
+    """Mark the covered threat as defended so it leaves the untriaged set (loop progression).
+
+    The defense carries only the threat *id*, but `is_consumed` matches on the threat's
+    title/fingerprint — so the actuator resolves the id against the provided threats list
+    and appends a `kind:"threat"` entry (the mechanism asserted by test_skip_when_already_defended).
+    Returns the threat_id if a new entry was appended, else None. Idempotent.
+    """
+    if not (threat_id and threats):
+        return None
+    threat = next((t for t in threats if t.get("threat_id") == threat_id), None)
+    if not threat:
+        return None
+    key = {"title": threat.get("title", ""), "fingerprint": threat.get("fingerprint")}
+    if is_consumed(key, ledger)["consumed"]:
+        return None
+    append_entry(ledger, {"entry_id": threat_id, "kind": "threat",
+                          "title": threat.get("title", ""),
+                          "fingerprint": threat.get("fingerprint")}, now=now)
+    return threat_id
+
+
+def record_defense(defense: dict, ledger_path: str, corpus_path: str, now: str,
+                   threats=None) -> dict:
     """Actuator: record a VERIFIED defense to the ledger + feed it back to the corpus.
 
     Idempotent — re-running on an already-recorded defense is a no-op. Only verified
-    + implemented defenses are accepted (defensive discipline). `now` injected.
+    + implemented defenses are accepted (defensive discipline). `now` injected. When
+    `threats` is supplied, the defense's `covers_threat` is also marked defended so the
+    threat leaves the untriaged set and `next_action` advances to the next threat.
     """
     if not is_verified(defense):
         return {"status": "rejected", "why": "defense not verified+implemented"}
@@ -109,16 +134,24 @@ def record_defense(defense: dict, ledger_path: str, corpus_path: str, now: str) 
              "implementations": defense.get("implementations", [])}
     ledger = read_json(ledger_path) or empty_ledger()
     reindex_ledger(ledger)
-    if is_consumed({"title": entry["title"], "fingerprint": fp}, ledger)["consumed"]:
-        return {"status": "already_recorded", "defense_id": entry["entry_id"]}
-    append_entry(ledger, entry, now=now)
-    atomic_write_json(ledger_path, ledger)
+    defense_already = is_consumed({"title": entry["title"], "fingerprint": fp}, ledger)["consumed"]
+    if not defense_already:
+        append_entry(ledger, entry, now=now)
+    # Mark the covered threat defended even on re-run (self-heals ledgers written before
+    # threat-marking existed); idempotent — a no-op once the threat is already recorded.
+    threat_marked = _mark_threat_defended(ledger, defense.get("covers_threat"), threats, now)
+    if not defense_already or threat_marked:
+        atomic_write_json(ledger_path, ledger)
+    if defense_already:
+        return {"status": "already_recorded", "defense_id": entry["entry_id"],
+                "threat_marked": threat_marked}
     corpus_entry = defense_to_corpus_entry(defense)
     corpus = read_json(corpus_path) or []
     if not any(c.get("defense_id") == corpus_entry["defense_id"] for c in corpus):
         corpus.append(corpus_entry)
         atomic_write_json(corpus_path, corpus)
-    return {"status": "closed", "defense_id": entry["entry_id"], "corpus_entry": corpus_entry}
+    return {"status": "closed", "defense_id": entry["entry_id"],
+            "threat_marked": threat_marked, "corpus_entry": corpus_entry}
 
 
 def _print(r: dict) -> None:
@@ -193,8 +226,10 @@ def _main(argv) -> int:
         if not (df and led and cor):
             sys.stderr.write(USAGE)
             return 2
+        root = _opt(argv, "--root") or ROOT
+        threats = threats_seed_to_list(_load(root, "threats.json", "threats.json"))
         with open(df, encoding="utf-8") as f:
-            res = record_defense(json.load(f), led, cor, now=_now(argv))
+            res = record_defense(json.load(f), led, cor, now=_now(argv), threats=threats)
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return 0 if res["status"] in ("closed", "already_recorded") else 1
 

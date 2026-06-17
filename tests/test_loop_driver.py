@@ -101,6 +101,34 @@ class TestDriver(unittest.TestCase):
             r2 = sisai.record_defense(defense, led, cor, now="2026-06-18")
             self.assertEqual(r2["status"], "already_recorded")
 
+    def test_record_defense_marks_threat_defended(self):
+        with tempfile.TemporaryDirectory() as d:
+            led = os.path.join(d, "ledger.json")
+            cor = os.path.join(d, "corpus.json")
+            with open(os.path.join(ROOT, "examples", "sample_defense.json"), encoding="utf-8") as f:
+                defense = json.load(f)
+            threats = [{"threat_id": defense["covers_threat"], "title": "PI",
+                        "fingerprint": "deadbeefcafe0001"}]
+            r = sisai.record_defense(defense, led, cor, now="2026-06-17", threats=threats)
+            self.assertEqual(r["status"], "closed")
+            self.assertEqual(r["threat_marked"], defense["covers_threat"])
+            from core.sisai_ledger import is_consumed, reindex_ledger
+            with open(led, encoding="utf-8") as f:
+                ledger = json.load(f)
+            reindex_ledger(ledger)
+            self.assertTrue(is_consumed(
+                {"title": "PI", "fingerprint": "deadbeefcafe0001"}, ledger)["consumed"])
+
+    def test_record_defense_without_threats_skips_marking(self):
+        with tempfile.TemporaryDirectory() as d:
+            led = os.path.join(d, "ledger.json")
+            cor = os.path.join(d, "corpus.json")
+            with open(os.path.join(ROOT, "examples", "sample_defense.json"), encoding="utf-8") as f:
+                defense = json.load(f)
+            r = sisai.record_defense(defense, led, cor, now="2026-06-17")
+            self.assertEqual(r["status"], "closed")
+            self.assertIsNone(r["threat_marked"])
+
     def test_record_defense_rejects_unverified(self):
         with tempfile.TemporaryDirectory() as d:
             res = sisai.record_defense(
