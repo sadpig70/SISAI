@@ -91,4 +91,8 @@ SISAI/
 `docs/SELF-DEFENSE.md`(SISAI 자기방어) · `docs/INSTRUCTIONS-sisai-cycle.md`(문서만 읽고 자율 한 턴).
 
 ## 라이선스
-방어 보안 연구·교육 목적. defensive-only.
+[MIT](LICENSE) © 2026 Jung Wook Yang.
+
+> **의지**: AI를 악용한 해킹·보안/안전 침해를 **탐색·방지하고 안전·보안을 앞당기기 위해**
+> 누구나 자유롭게 쓰고 기여할 수 있도록 MIT로 공개한다. 이 소프트웨어는 **defensive-only**다
+> — 탐지·방지·리포트가 목적이며, 무기화(작동 익스플로잇·표적공격 자동화·탐지회피)는 범위 밖이다.
