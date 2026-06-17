@@ -1,8 +1,10 @@
 """SISAI backbone tests: fingerprint, io, schema, channels, ledger, triage, provenance."""
+import io
 import json
 import os
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from unittest import mock
 
 import tests._path  # noqa: F401
@@ -59,6 +61,16 @@ class TestIo(unittest.TestCase):
             self.assertEqual(read_json(p), {"v": 1})
             self.assertEqual([n for n in os.listdir(d) if n.endswith(".tmp")], [])
 
+    def test_read_json_self_heals_from_bak(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "s.json")
+            atomic_write_json(p, {"v": 1})
+            atomic_write_json(p, {"v": 2})            # .bak now snapshots {"v": 1}
+            with open(p, "w", encoding="utf-8") as f:
+                f.write("{ broken json ")             # corrupt the live file
+            with io.StringIO() as buf, redirect_stderr(buf):
+                self.assertEqual(read_json(p), {"v": 1})  # recovered from .bak
+
 
 class TestSchema(unittest.TestCase):
     def test_walker_required_and_enum(self):
@@ -66,6 +78,15 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(validate_against_schema({"k": "a"}, s), [])
         self.assertTrue(validate_against_schema({}, s))
         self.assertTrue(validate_against_schema({"k": "z"}, s))
+
+    def test_walker_pattern(self):
+        s = {"type": "object", "properties":
+             {"recency": {"type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}(-[0-9]{2})?$"}}}
+        self.assertEqual(validate_against_schema({"recency": "2025-07"}, s), [])
+        self.assertEqual(validate_against_schema({"recency": "2026-06-17"}, s), [])
+        self.assertEqual(validate_against_schema({"recency": None}, s), [])   # null skips pattern
+        self.assertTrue(validate_against_schema({"recency": "July 2025"}, s))
+        self.assertTrue(schema_features(s)["in_subset"])   # pattern stays in walker subset
 
     def test_shipped_schemas_in_subset(self):
         for name in ("channel", "threat", "defense", "ledger", "loop-state"):
@@ -125,6 +146,14 @@ class TestTriage(unittest.TestCase):
     def test_recency_decay_bounds(self):
         self.assertEqual(recency_decay("2026-06-17", "2026-06-17"), 1.0)
         self.assertEqual(recency_decay("2000-01-01", "2026-06-17"), 0.0)
+
+    def test_recency_month_only_contributes(self):
+        # seed corpus uses 'YYYY-MM'; it must decay between 0 and 1 (not dead at 0)
+        d = recency_decay("2026-01", "2026-06-17")
+        self.assertTrue(0.0 < d < 1.0)
+        # newer month decays less than older month
+        self.assertGreater(recency_decay("2026-05", "2026-06-17"),
+                           recency_decay("2025-01", "2026-06-17"))
 
     def test_high_cvss_recent_ranks_first(self):
         threats = [

@@ -77,18 +77,21 @@ def validate_schemas_in_subset(root: str) -> list:
 def validate_seeds(root: str) -> list:
     """Seed channels/threats/defenses must satisfy their schemas."""
     problems = []
-    chs = json.load(open(os.path.join(root, "seed", "channels.json"), encoding="utf-8"))
+    with open(os.path.join(root, "seed", "channels.json"), encoding="utf-8") as f:
+        chs = json.load(f)
     for i, ch in enumerate(chs):
         problems += [f"seed channel[{i}]: {p}"
                      for p in validate_against_schema(ch, schema_path(root, "channel"))]
-    threats = json.load(open(os.path.join(root, "seed", "threats.json"), encoding="utf-8"))["threats"]
+    with open(os.path.join(root, "seed", "threats.json"), encoding="utf-8") as f:
+        threats = json.load(f)["threats"]
     for i, t in enumerate(threats):
         # seed threats omit the generated threat_id/fingerprint; validate the human fields
         probe = dict(t)
         probe.setdefault("threat_id", f"SEED-{i}")
         problems += [f"seed threat[{i}]: {p}"
                      for p in validate_against_schema(probe, schema_path(root, "threat"))]
-    defenses = json.load(open(os.path.join(root, "seed", "defenses.json"), encoding="utf-8"))["defenses"]
+    with open(os.path.join(root, "seed", "defenses.json"), encoding="utf-8") as f:
+        defenses = json.load(f)["defenses"]
     for i, d in enumerate(defenses):
         probe = dict(d)
         probe.setdefault("defense_id", f"SEED-{i}")
@@ -146,7 +149,8 @@ def validate_integrity(root: str) -> list:
     path = os.path.join(root, SKILL_MANIFEST)
     if not os.path.exists(path):
         return [f"skill integrity: {SKILL_MANIFEST} missing (run --write-integrity)"]
-    recorded = json.load(open(path, encoding="utf-8")).get("files", {})
+    with open(path, encoding="utf-8") as f:
+        recorded = json.load(f).get("files", {})
     current = compute_skill_manifest(root)
     problems = []
     for rel, h in recorded.items():

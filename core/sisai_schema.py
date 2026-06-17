@@ -11,6 +11,7 @@ outrun the walker.
 
 import json
 import os
+import re
 
 _TYPE_OK = {
     "object": lambda v: isinstance(v, dict),
@@ -24,7 +25,7 @@ _TYPE_OK = {
 
 _SUPPORTED = {
     "$schema", "$id", "title", "description", "type", "required", "properties",
-    "items", "enum", "minimum", "maximum",
+    "items", "enum", "minimum", "maximum", "pattern",
 }
 
 
@@ -45,6 +46,9 @@ def _walk(value, schema, path, problems):
         return
     if "enum" in schema and value not in schema["enum"]:
         problems.append(f"{path}: {value!r} not in enum {schema['enum']}")
+    if isinstance(value, str) and "pattern" in schema:
+        if re.search(schema["pattern"], value) is None:
+            problems.append(f"{path}: {value!r} does not match pattern {schema['pattern']}")
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         if "minimum" in schema and value < schema["minimum"]:
             problems.append(f"{path}: {value} < minimum {schema['minimum']}")

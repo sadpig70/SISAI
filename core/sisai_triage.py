@@ -19,21 +19,46 @@ DEFAULT_COVERAGE_THRESHOLDS = {
 }
 
 
-def _date_ordinal(d: str) -> int:
-    """Map an ISO-ish date 'YYYY-MM-DD...' to an integer day count (deterministic).
+def _parse_ymd(d: str):
+    """Parse 'YYYY-MM' or 'YYYY-MM-DD' -> (y, m, day); None if unparseable.
 
-    Tolerant: returns 0 if unpar. Pure arithmetic on injected strings, no clock.
+    'YYYY-MM' (month-only, as the seed corpus uses) is read as the 1st of the month.
+    Pure parsing of an injected string — no clock.
     """
-    if not d or len(d) < 10:
-        return 0
+    if not d or len(d) < 7:
+        return None
     try:
-        y, m, day = int(d[0:4]), int(d[5:7]), int(d[8:10])
+        y, m = int(d[0:4]), int(d[5:7])
+        day = int(d[8:10]) if len(d) >= 10 else 1
     except ValueError:
-        return 0
-    return y * 372 + m * 31 + day           # monotonic enough for ordering/decay
+        return None
+    if not (1 <= m <= 12 and 1 <= day <= 31):
+        return None
+    return (y, m, day)
 
 
-def recency_decay(recency: str, now: str, horizon_days: int = 372) -> float:
+def _days_from_civil(y: int, m: int, day: int) -> int:
+    """Days since 1970-01-01 (proleptic Gregorian). Exact, pure integer arithmetic.
+
+    Howard Hinnant's algorithm — gives true day counts (leap years, 28/30/31) WITHOUT
+    importing datetime, so the deterministic 'no clock' boundary is preserved.
+    """
+    y -= 1 if m <= 2 else 0
+    era = (y if y >= 0 else y - 399) // 400
+    yoe = y - era * 400
+    mm = m - 3 if m > 2 else m + 9
+    doy = (153 * mm + 2) // 5 + day - 1
+    doe = yoe * 365 + yoe // 4 - yoe // 100 + doy
+    return era * 146097 + doe - 719468
+
+
+def _date_ordinal(d: str) -> int:
+    """Exact day count (since epoch) from 'YYYY-MM[-DD]'. Tolerant: 0 if unparseable."""
+    p = _parse_ymd(d)
+    return _days_from_civil(*p) if p else 0
+
+
+def recency_decay(recency: str, now: str, horizon_days: int = 365) -> float:
     """1.0 for 'today', decaying linearly to 0.0 at `horizon_days` old. Clamped [0,1]."""
     age = _date_ordinal(now) - _date_ordinal(recency)
     if age <= 0:

@@ -10,7 +10,7 @@
     "techniques": {"type": "array", "items": {"type": "string"}},
     "cve": {"type": ["string", "null"]},
     "cvss": {"type": ["number", "null"], "minimum": 0, "maximum": 10},
-    "recency": {"type": ["string", "null"]},
+    "recency": {"type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}(-[0-9]{2})?$"},
     "source_channels": {"type": "array", "items": {"type": "string"}},
     "evidence": {"type": "array", "items": {"type": "string"}},
     "fingerprint": {"type": "string"}

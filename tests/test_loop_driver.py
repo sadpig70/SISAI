@@ -82,14 +82,19 @@ class TestDriver(unittest.TestCase):
         r2 = sisai.build_report(now="2026-06-17")
         self.assertEqual(r1, r2)
 
-    def test_status_top_threat_is_highest_cvss(self):
-        # Hermetic: read seed taxonomy via an empty root (no .sisai/ live state),
-        # so the assertion tests triage on the seed, not mutable runtime state.
+    def test_status_top_threat_is_highest_triage_score(self):
+        # Hermetic: read seed taxonomy via an empty root (no .sisai/ live state).
+        # top_threat must be the max triage score (severity x recency), NOT merely the
+        # highest CVSS — a newer, slightly-lower-CVSS threat can correctly outrank it.
+        from core.sisai_triage import triage_score
+        from engines.adapters import threats_seed_to_list
         with tempfile.TemporaryDirectory() as d:
             r = sisai.build_report(root=d, now="2026-06-17")
-        # prompt injection (CVSS 9.8) is the seeded max-severity threat
-        self.assertEqual(r["top_threat"]["category"], "llm-prompt-injection")
-        self.assertEqual(r["top_threat"]["cvss"], 9.8)
+        with open(os.path.join(ROOT, "seed", "threats.json"), encoding="utf-8") as f:
+            seed = threats_seed_to_list(json.load(f))
+        by_id = {t["threat_id"]: t for t in seed}
+        top_score = triage_score(by_id[r["top_threat"]["threat_id"]], "2026-06-17")
+        self.assertEqual(top_score, max(triage_score(t, "2026-06-17") for t in seed))
 
     def test_record_defense_closed_then_idempotent(self):
         with tempfile.TemporaryDirectory() as d:
