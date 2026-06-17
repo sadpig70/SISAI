@@ -1,0 +1,56 @@
+{
+  "rule_id": "PI-001",
+  "title": "Indirect prompt-injection & doc-borne RCE directive detector",
+  "version": "1.0",
+  "covers_threat": "THR-0b24f8ec",
+  "covers_category": "llm-prompt-injection",
+  "covers_techniques": ["indirect-injection", "rce-via-readme"],
+  "intent": "DETECT injection/hijack directives hidden in INGESTED external text (README, CVE descriptions, advisories, web). Output is a verdict (data) only; it never elevates matched text to an instruction. Reinforces the deterministic boundary in docs/SELF-DEFENSE.md.",
+  "scope": "ingested_external_text",
+  "action_on_match": ["flag", "isolate", "require_human_review"],
+  "patterns": [
+    {
+      "id": "PI-001.override",
+      "severity": "high",
+      "desc": "Imperative override of prior instructions at clause start (attack), not third-person description.",
+      "regex": "(?im)(?:^|[.\\n!?][\"')\\]]*\\s+)(?:ignore|disregard|forget|override)\\s+(?:all\\s+|any\\s+)?(?:your\\s+|the\\s+|these\\s+|those\\s+)?(?:previous|prior|above|earlier|preceding|prior)\\s+(?:instruction|prompt|message|rule|context|direction)s?"
+    },
+    {
+      "id": "PI-001.role-hijack",
+      "severity": "high",
+      "desc": "Role / system-prompt override or jailbreak framing.",
+      "regex": "(?i)(?:you\\s+are\\s+now\\b|new\\s+(?:instructions?|system\\s+prompt|role|persona)\\s*:|developer\\s+mode\\b|jailbreak\\b|\\bact\\s+as\\b[^.\\n]{0,40}\\b(?:unrestricted|no\\s+restrictions|DAN)\\b)"
+    },
+    {
+      "id": "PI-001.prompt-exfil",
+      "severity": "high",
+      "desc": "Attempt to extract the system / hidden prompt or prior instructions.",
+      "regex": "(?i)\\b(?:reveal|print|repeat|show|output|leak|disclose|dump)\\b[^.\\n]{0,40}\\b(?:system\\s+prompt|hidden\\s+prompt|initial\\s+prompt|your\\s+(?:instructions?|prompt|rules)|the\\s+prompt\\s+above)\\b"
+    },
+    {
+      "id": "PI-001.embedded-exec",
+      "severity": "critical",
+      "desc": "Directive telling the reading agent to run/execute embedded commands or code (README/doc-borne RCE, e.g. CVE-2025-54135).",
+      "regex": "(?i)\\b(?:run|execute|eval|invoke|launch)\\b[^.\\n]{0,30}\\b(?:the\\s+following|this|below|attached)\\b[^.\\n]{0,25}\\b(?:command|code|script|shell|payload|tool)\\b"
+    },
+    {
+      "id": "PI-001.secret-exfil",
+      "severity": "critical",
+      "desc": "Directive telling the reader to send/upload THEIR OWN (second-person) secrets to a sink. Second-person scoping avoids flagging third-person descriptions of attacker behavior.",
+      "regex": "(?i)\\b(?:send|upload|post|exfiltrate|forward|email|paste)\\b[^.\\n]{0,20}\\byour\\b[^.\\n]{0,25}\\b(?:secret|token|api[\\s_-]?key|password|credential|env(?:ironment)?\\s+var|\\.env)s?\\b"
+    },
+    {
+      "id": "PI-001.agent-address",
+      "severity": "high",
+      "desc": "Text that directly addresses the AI/assistant/agent and commands an action.",
+      "regex": "(?i)\\b(?:to\\s+the\\s+(?:ai|assistant|model|agent|llm)|dear\\s+(?:ai|assistant|model)|when\\s+you\\s+(?:read|see|process)\\s+this|ai\\s+assistant\\s*[:,])\\b[^.\\n]{0,60}\\b(?:must|should|please|now)\\b[^.\\n]{0,30}\\b(?:run|execute|open|delete|send|fetch|ignore|disregard|reveal|exfiltrate|download)\\b"
+    },
+    {
+      "id": "PI-001.hidden-marker",
+      "severity": "medium",
+      "desc": "Directive concealed in an HTML/markdown comment or via zero-width / bidi control characters.",
+      "regex": "(?is)<!--[^>]*?(?:ignore|instruction|system\\s+prompt|execute|exfiltrate|password|token)[^>]*?-->|[\\u200b\\u200c\\u200d\\u200e\\u200f\\u202a-\\u202e\\u2060\\ufeff]"
+    }
+  ],
+  "verdict_rule": "malicious if any pattern matches; classification is advisory (data), routed to action_on_match. False-positive policy: descriptive third-person security text must NOT match (see verify suite)."
+}
