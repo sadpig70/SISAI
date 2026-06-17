@@ -1,3 +1,5 @@
+![SISAI](assets/SISAI_hero.png)
+
 # SISAI — Self-improvement Security AI
 
 > **보안/안전 채널을 스스로 발굴·확장하며 해킹 방법·사례를 수집하고,
