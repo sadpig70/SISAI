@@ -1,0 +1,56 @@
+{
+  "rule_id": "II-001",
+  "title": "Multi-tenant infra isolation-bypass indicator detector",
+  "version": "1.0",
+  "covers_threat": "THR-85f99df4",
+  "covers_category": "infra-isolation",
+  "covers_techniques": ["tenant-escape", "lateral-movement", "token-exposure"],
+  "intent": "DETECT multi-tenant isolation-bypass indicators in INGESTED logs / config / audit text: cross-tenant resource access, container/VM escape signatures, east-west lateral-movement, leaked or over-scoped service tokens, and namespace/cgroup boundary violations. Output is a verdict (data) only; matched text is never elevated to an instruction. Reinforces the deterministic boundary in docs/SELF-DEFENSE.md.",
+  "scope": "ingested_infra_logs_config_audit",
+  "action_on_match": ["flag", "isolate", "require_human_review"],
+  "patterns": [
+    {
+      "id": "II-001.cross-tenant-access",
+      "severity": "high",
+      "desc": "An identity scoped to one tenant/namespace accessing a resource belonging to a different tenant/namespace/project (cross-tenant read/access denial or mismatch in audit logs).",
+      "regex": "(?i)(?:cross[\\s_-]?tenant|tenant[\\s_-]?(?:mismatch|boundary|isolation\\s+(?:bypass|violation))|foreign[\\s_-]?tenant|other[\\s_-]?tenant'?s)\\b[^\\n]{0,40}\\b(?:access|read|resource|object|bucket|secret|volume|data)|(?:tenant|namespace|project)\\s*=\\s*[a-z0-9-]+\\b[^\\n]{0,30}\\b(?:access(?:ing|ed)?|read)\\b[^\\n]{0,40}\\b(?:belong|owned)\\w*\\b[^\\n]{0,20}\\b(?:other|another|different|foreign)\\b"
+    },
+    {
+      "id": "II-001.container-escape",
+      "severity": "critical",
+      "desc": "Container / VM escape signatures: writes to host paths, abuse of release_agent, privileged nsenter onto host PID namespace, or known escape-primitive markers.",
+      "regex": "(?i)\\b(?:container|sandbox|vm)\\s+escape\\b|\\brelease_agent\\b|\\bnsenter\\b[^\\n]{0,30}\\b(?:--target\\s+1|-t\\s+1|mount|pid|host)\\b|\\b(?:write|mount|chroot)\\b[^\\n]{0,30}/host(?:/|fs|proc|root)\\b|\\bescap(?:e|ed|ing)\\b[^\\n]{0,20}\\b(?:to\\s+)?host\\b"
+    },
+    {
+      "id": "II-001.privileged-breakout",
+      "severity": "high",
+      "desc": "Privileged-container / capability / hostPath breakout indicators in orchestrator config or runtime audit (privileged=true, hostPID/hostNetwork, SYS_ADMIN, docker.sock mount).",
+      "regex": "(?i)\\bprivileged\\s*[:=]\\s*true\\b|\\bhost(?:PID|Network|IPC|Path)\\s*[:=]\\s*true\\b|\\bcap[\\s_-]?add\\b[^\\n]{0,20}\\b(?:SYS_ADMIN|SYS_PTRACE|ALL)\\b|\\b(?:mount|volume|hostPath)\\b[^\\n]{0,20}/var/run/docker\\.sock|/var/run/docker\\.sock\\b[^\\n]{0,20}\\b(?:mount|volume|hostPath)\\b"
+    },
+    {
+      "id": "II-001.lateral-movement",
+      "severity": "high",
+      "desc": "Unexpected east-west connections / lateral-movement indicators: pod-to-pod or workload-to-workload traffic crossing a segmentation boundary, or remote-exec pivot across hosts.",
+      "regex": "(?i)\\b(?:lateral[\\s_-]?movement|east[\\s_-]?west)\\b|\\b(?:unexpected|unauthorized|denied)\\b[^\\n]{0,25}\\b(?:east[\\s_-]?west|pod[\\s_-]?to[\\s_-]?pod|workload[\\s_-]?to[\\s_-]?workload|cross[\\s_-]?(?:namespace|segment|zone))\\b[^\\n]{0,25}\\b(?:connection|traffic|flow)\\b|\\bpivot(?:ing|ed)?\\b[^\\n]{0,25}\\b(?:to\\s+)?(?:host|node|workload|tenant)\\b"
+    },
+    {
+      "id": "II-001.token-exposure",
+      "severity": "critical",
+      "desc": "Leaked or exposed service-account / cloud / mounted tokens surfacing in logs (JWT-shaped SA token, mounted serviceaccount token path, cloud metadata credential dump).",
+      "regex": "(?i)\\b(?:service[\\s_-]?account|sa|bearer|access)\\s+token\\b[^\\n]{0,25}\\b(?:leak|exposed|printed|dumped|in\\s+log|plaintext)\\b|/var/run/secrets/kubernetes\\.io/serviceaccount/token|\\beyJ[A-Za-z0-9_-]{8,}\\.[A-Za-z0-9_-]{8,}\\.[A-Za-z0-9_-]{6,}\\b|169\\.254\\.169\\.254[^\\n]{0,40}\\b(?:token|credential|iam|security-credentials)\\b"
+    },
+    {
+      "id": "II-001.over-scoped-token",
+      "severity": "high",
+      "desc": "Over-scoped / over-privileged credential grants: wildcard RBAC, cluster-admin binding to a tenant workload, or IAM policy granting all actions on all resources.",
+      "regex": "(?i)\\bcluster[\\s_-]?admin\\b[^\\n]{0,30}\\b(?:bind|binding|grant(?:ed)?|assigned)\\b[^\\n]{0,30}\\b(?:tenant|namespace|service[\\s_-]?account|workload)\\b|\\b(?:roleRef|role)\\b[^\\n]{0,20}\\b(?:\\*|wildcard|all)\\b[^\\n]{0,20}\\b(?:verbs|resources|actions)\\b|\"Action\"\\s*:\\s*\"\\*\"[^\\n]{0,40}\"Resource\"\\s*:\\s*\"\\*\""
+    },
+    {
+      "id": "II-001.namespace-cgroup-violation",
+      "severity": "high",
+      "desc": "Namespace / cgroup boundary violations: setns/unshare onto a foreign namespace, cgroup escape via subtree write, or audit denial of a namespace boundary crossing.",
+      "regex": "(?i)\\b(?:setns|unshare)\\b[^\\n]{0,30}\\b(?:host|foreign|other|pid\\s*1|target\\s+1)\\b|\\bcgroup\\b[^\\n]{0,25}\\b(?:escape|breakout|subtree[\\s_-]?write|boundary\\s+violation)\\b|\\bnamespace\\b[^\\n]{0,20}\\bboundary\\b[^\\n]{0,15}\\bviolat(?:ion|ed)\\b|\\b(?:AVC|seccomp|apparmor)\\b[^\\n]{0,25}\\bdenied\\b[^\\n]{0,30}\\b(?:mount|setns|namespace|ptrace)\\b"
+    }
+  ],
+  "verdict_rule": "malicious if any pattern matches; classification is advisory (data), routed to action_on_match. False-positive policy: normal infra logs (healthy pod scheduling, routine RBAC reads, ordinary container starts, intra-tenant traffic) must NOT match (see verify suite)."
+}

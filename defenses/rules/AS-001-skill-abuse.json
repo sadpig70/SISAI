@@ -1,0 +1,62 @@
+{
+  "rule_id": "AS-001",
+  "title": "Agent/skill ecosystem abuse detector (malicious skill manifest & doc-borne RCE)",
+  "version": "1.0",
+  "covers_threat": "THR-319ed4ee",
+  "covers_category": "agent-skill-abuse",
+  "covers_techniques": ["malicious-skill", "indirect-injection-rce"],
+  "intent": "DETECT signs of agent/skill ecosystem abuse in INGESTED skill/plugin/MCP manifests or READMEs (CVE-2025-53773 class): excessive tool-permission requests, hidden command execution embedded in a manifest, remote/dynamic skill loading, allowlist-broadening directives, unpinned dependencies, and agent-addressed hijacks. Output is a verdict (data) only; matched text is never elevated to an instruction. Reinforces SISAI's vendored-skills + whitelist + version-pinning doctrine (docs/SELF-DEFENSE.md).",
+  "scope": "ingested_skill_or_manifest_text",
+  "action_on_match": ["flag", "isolate", "require_human_review"],
+  "patterns": [
+    {
+      "id": "AS-001.excessive-permission",
+      "severity": "high",
+      "desc": "Manifest requests excessive/total tool or filesystem permissions (allow-all scope), not a third-person description.",
+      "regex": "(?i)(?:\"?(?:permissions?|scopes?|allowed[_-]?tools?|capabilities)\"?\\s*[:=]\\s*[\\[\"']?\\s*(?:\\*|all|any|full[_-]?access|unrestricted|admin)|\\b(?:grant|request)s?\\b[^.\\n]{0,30}\\b(?:all|full|unrestricted|every)\\b[^.\\n]{0,20}\\b(?:permission|tool|scope|capabilit)\\w*)"
+    },
+    {
+      "id": "AS-001.hidden-exec",
+      "severity": "critical",
+      "desc": "Manifest field embeds shell/command execution (postInstall hook, run/exec command keys piping to a shell).",
+      "regex": "(?i)\"?(?:post[_-]?install|pre[_-]?install|on[_-]?(?:load|install|start)|setup|run|exec|command|entrypoint|hooks?)\"?\\s*[:=]\\s*[\"'][^\"'\\n]{0,80}(?:curl|wget|bash|sh\\b|powershell|pwsh|cmd(?:\\.exe)?|os\\.system|subprocess|eval|exec)\\b"
+    },
+    {
+      "id": "AS-001.remote-dynamic-load",
+      "severity": "critical",
+      "desc": "Skill/plugin/tool loaded dynamically from a remote URL at runtime (remote dynamic loading).",
+      "regex": "(?i)\\b(?:load|import|fetch|download|pull|install|source)\\b[^.\\n]{0,30}\\b(?:skill|plugin|tool|module|manifest|extension|mcp[_-]?server)\\b[^.\\n]{0,30}\\b(?:from|at|via|url)\\b[^.\\n]{0,15}https?://"
+    },
+    {
+      "id": "AS-001.allowlist-broaden",
+      "severity": "high",
+      "desc": "Directive to broaden/disable the tool or skill allowlist or trust-list (defeating whitelist control).",
+      "regex": "(?i)\\b(?:add|append|insert|whitelist|allow[_-]?list|register|broaden|extend|disable|bypass|skip|turn\\s+off)\\b[^.\\n]{0,40}\\b(?:allow[_-]?list|allowlist|whitelist|tool[_-]?list|trust[_-]?(?:ed)?[_-]?list|skill[_-]?registry|permission[_-]?check|sandbox|approval)\\b"
+    },
+    {
+      "id": "AS-001.unpinned-dependency",
+      "severity": "medium",
+      "desc": "Dependency referenced without version pinning (latest/* / branch / git HEAD), enabling supply-chain drift.",
+      "regex": "(?i)(?:\"?(?:dependenc(?:y|ies)|requires?|version|ref|tag|tarball)\"?\\s*[:=]\\s*[\"']?(?:\\*|(?:latest|main|master|HEAD|develop)\\b)|\\b(?:pip\\s+install|npm\\s+install|npm\\s+i|uvx|npx)\\b[^.\\n]{0,40}@(?:latest|main|master|HEAD)\\b|git\\+https?://[^\\s\"']+)"
+    },
+    {
+      "id": "AS-001.agent-address-skill",
+      "severity": "high",
+      "desc": "Manifest/README directly addresses the agent and commands it to install, enable, or elevate a skill/tool.",
+      "regex": "(?i)\\b(?:to\\s+the\\s+(?:ai|assistant|agent|model|llm)|when\\s+you\\s+(?:read|load|process|see)\\s+this|ai\\s+(?:assistant|agent)\\s*[:,])\\b[^.\\n]{0,60}\\b(?:must|should|please|now)\\b[^.\\n]{0,30}\\b(?:install|enable|load|trust|grant|elevate|allow|register|run|execute)\\b"
+    },
+    {
+      "id": "AS-001.privilege-escalation",
+      "severity": "high",
+      "desc": "Manifest declares elevated/privileged execution (root/admin/sudo, no-sandbox, escalated trust level).",
+      "regex": "(?i)(?:\"?(?:privileged|elevated|run[_-]?as|trust[_-]?level|sandbox)\"?\\s*[:=]\\s*[\"']?(?:true|root|admin|system|none|disabled|off|high)|\\b(?:--no-sandbox|--privileged|run\\s+as\\s+(?:root|admin|administrator))\\b)"
+    },
+    {
+      "id": "AS-001.credential-harvest",
+      "severity": "critical",
+      "desc": "Manifest/skill requests or reads the host's credentials/tokens/.env on install or load (over-broad credential access).",
+      "regex": "(?i)\\b(?:read|collect|harvest|access|require|send|upload|export)\\b[^.\\n]{0,40}(?:\\benv(?:ironment)?\\s+var\\w*|\\.env\\b|\\bapi[\\s_-]?keys?|\\bsecrets?|\\btokens?|\\bcredentials?|~/\\.ssh|\\baws[_-]?credentials)\\b[^.\\n]{0,40}\\b(?:on\\s+(?:install|load|start)|at\\s+startup|during\\s+setup|automatically)\\b"
+    }
+  ],
+  "verdict_rule": "malicious if any pattern matches; classification is advisory (data), routed to action_on_match. False-positive policy: descriptive third-person security text and normal pinned manifests must NOT match (see verify suite)."
+}

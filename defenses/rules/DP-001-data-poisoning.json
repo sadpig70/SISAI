@@ -1,0 +1,62 @@
+{
+  "rule_id": "DP-001",
+  "title": "Data/corpus poisoning & secret-leak indicator detector",
+  "version": "1.0",
+  "covers_threat": "THR-9d67538a",
+  "covers_category": "data-poisoning",
+  "covers_techniques": ["backdoor-poisoning", "trigger-sample"],
+  "intent": "DETECT data/corpus poisoning indicators in INGESTED training/corpus samples — backdoor trigger tokens, label-flip markers, anomalous repeated trigger phrases, hidden unicode triggers, and secret/credential leakage into uploads. Output is a verdict (data) only; matched content is never elevated to an instruction. Reinforces SISAI's verified-only corpus feedback + fingerprint/provenance doctrine (docs/SELF-DEFENSE.md).",
+  "scope": "ingested_training_or_corpus_samples",
+  "action_on_match": ["flag", "quarantine", "block_corpus_feedback", "require_provenance_review"],
+  "patterns": [
+    {
+      "id": "DP-001.backdoor-trigger",
+      "severity": "high",
+      "desc": "Explicit backdoor/trigger-token framing announcing a poisoned activation phrase planted in a sample.",
+      "regex": "(?i)\\b(?:backdoor|poison(?:ed|ing)?)\\b[\\s_-]*\\b(?:trigger|activation)\\b[\\s_-]*\\b(?:token|phrase|word|sample|sequence|key|payload)?\\b|\\btrigger[\\s_-]?(?:token|phrase|word|sample|sequence|payload)\\b"
+    },
+    {
+      "id": "DP-001.label-flip",
+      "severity": "high",
+      "desc": "Label-flip / mislabel marker that forces a corpus entry to a target class regardless of content.",
+      "regex": "(?i)(?:\\b(?:flip|swap|invert|force|override|set)\\b[^.\\n]{0,20}\\b(?:the\\s+)?(?:label|class|ground[\\s_-]?truth|target|annotation|verdict)\\b|\\blabel[\\s_-]?(?:flip|poison|swap)\\b|\"label\"\\s*:\\s*\"(?:__|<|attacker|target)[^\"]*\")"
+    },
+    {
+      "id": "DP-001.magic-trigger-token",
+      "severity": "critical",
+      "desc": "Conspicuous magic activation marker / sentinel token typical of backdoor triggers (e.g. cf-trigger, TRIGGER_, [[activate]], delimiter sentinels).",
+      "regex": "(?i)(?:\\bcf[\\s_-]?trigger\\b|\\btrigger[\\s_-]?\\d{2,}\\b|TRIGGER_[A-Z0-9]{3,}|\\bSUDO[\\s_-]?MODE\\b|\\[\\[\\s*activate[^\\]]*\\]\\]|<\\|\\s*trigger\\s*\\|>|\\bjames\\s+bond\\s+007\\b)"
+    },
+    {
+      "id": "DP-001.repeated-trigger",
+      "severity": "medium",
+      "desc": "Anomalous high-frequency repetition of the same rare token/phrase — a statistical hallmark of trigger-sample stuffing.",
+      "regex": "(?is)\\b(\\w{4,})\\b(?:\\W+\\b\\1\\b){5,}"
+    },
+    {
+      "id": "DP-001.hidden-unicode-trigger",
+      "severity": "high",
+      "desc": "Hidden zero-width / bidi control characters embedded in a sample to encode an invisible trigger.",
+      "regex": "[\\u200b\\u200c\\u200d\\u200e\\u200f\\u202a-\\u202e\\u2060\\ufeff]"
+    },
+    {
+      "id": "DP-001.secret-leak",
+      "severity": "critical",
+      "desc": "Concrete credential / secret material leaked into an ingested/upload sample (API keys, private keys, tokens, connection strings).",
+      "regex": "(?i)(?:AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN\\s+(?:RSA|OPENSSH|EC|DSA|PRIVATE)\\s+(?:PRIVATE\\s+)?KEY-----|(?:postgres|mysql|mongodb)(?:\\+\\w+)?:\\/\\/[^\\s:@]+:[^\\s:@]+@)"
+    },
+    {
+      "id": "DP-001.secret-assignment",
+      "severity": "high",
+      "desc": "Secret-bearing key/value assignment carrying a real-looking high-entropy value smuggled into a corpus sample.",
+      "regex": "(?i)\\b(?:api[\\s_-]?key|secret[\\s_-]?key|access[\\s_-]?token|auth[\\s_-]?token|password|passwd|private[\\s_-]?key)\\b\\s*[:=]\\s*[\"']?[A-Za-z0-9/+_-]{16,}[\"']?"
+    },
+    {
+      "id": "DP-001.exfil-upload",
+      "severity": "high",
+      "desc": "Sample instructing that ingested data / secrets be uploaded to an external LLM or sink — secret-leak via external-assistant upload.",
+      "regex": "(?i)\\b(?:upload|send|post|forward|paste|sync)\\b[^\\n]{0,40}\\b(?:training\\s+data|corpus|dataset|secret|credential|api[\\s_-]?key|\\.env)s?\\b[^\\n]{0,40}\\b(?:to|into)\\b[^\\n]{0,30}\\b(?:external|chatgpt|openai|claude|gemini|copilot|llm|endpoint|paste\\w*|gist)\\b"
+    }
+  ],
+  "verdict_rule": "malicious if any pattern matches; classification is advisory (data), routed to action_on_match. A matched sample is quarantined and BLOCKED from corpus feedback until provenance review (verified-only corpus doctrine). False-positive policy: normal training text and third-person descriptions of poisoning must NOT match (see verify suite)."
+}

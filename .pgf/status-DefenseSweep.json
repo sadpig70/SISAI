@@ -1,0 +1,34 @@
+{
+  "project": "DefenseSweep",
+  "version": "1.0",
+  "now": "2026-06-17",
+  "summary": {"done": 6, "total": 6, "phase": "complete"},
+  "result": {
+    "threats_untriaged": "0 / 10",
+    "channels_active": 9,
+    "missing_kinds": [],
+    "next_action": "RUN_THREAT_INTEL",
+    "ledger_entries": 20,
+    "corpus_entries": 10,
+    "gates": "validate PASS · 40 unittests OK · build_report deterministic"
+  },
+  "batches": {
+    "B0_ChannelExpansion": {"status": "done", "items": ["news", "oss", "exploit_db"], "result": "active 9, missing_kinds=[]"},
+    "B1_AdoptTrack": {"status": "done", "items": ["AS", "SC", "SE", "DP", "SCH"]},
+    "B2_DesignTrack": {"status": "done", "items": ["II", "MA", "CA", "AE"]},
+    "B3_RecordLoop": {"status": "done", "recorded": ["THR-319ed4ee", "THR-3737c297", "THR-96d32f71", "THR-9d67538a", "THR-f9d3875d", "THR-85f99df4", "THR-b3d64864", "THR-ca2d7e92", "THR-e4d97fa0"]},
+    "B4_FinalVerify": {"status": "done", "verdict": "passed"},
+    "B5_Commit": {"status": "done"}
+  },
+  "cycles": {
+    "AS":  {"threat": "THR-319ed4ee", "plan": "ADOPT_EXTERNAL", "status": "done", "metrics": {"recall": 1.0, "precision": 1.0}},
+    "SC":  {"threat": "THR-3737c297", "plan": "ADOPT_EXTERNAL", "status": "done", "metrics": {"recall": 1.0, "precision": 1.0}},
+    "SE":  {"threat": "THR-96d32f71", "plan": "ADOPT_EXTERNAL", "status": "done", "metrics": {"recall": 1.0, "precision": 0.9167}},
+    "DP":  {"threat": "THR-9d67538a", "plan": "ADOPT_EXTERNAL", "status": "done", "metrics": {"recall": 1.0, "precision": 1.0}},
+    "SCH": {"threat": "THR-f9d3875d", "plan": "ADOPT_EXTERNAL", "status": "done", "metrics": {"recall": 1.0, "precision": 1.0}},
+    "II":  {"threat": "THR-85f99df4", "plan": "DESIGN_DEFENSE", "status": "done", "metrics": {"recall": 1.0, "precision": 1.0}},
+    "MA":  {"threat": "THR-b3d64864", "plan": "DESIGN_DEFENSE", "status": "done", "metrics": {"recall": 1.0, "precision": 1.0}},
+    "CA":  {"threat": "THR-ca2d7e92", "plan": "DESIGN_DEFENSE", "status": "done", "metrics": {"recall": 1.0, "precision": 1.0}},
+    "AE":  {"threat": "THR-e4d97fa0", "plan": "DESIGN_DEFENSE", "status": "done", "metrics": {"recall": 1.0, "precision": 1.0}}
+  }
+}

@@ -1,0 +1,18 @@
+{"id": "m01", "label": "malicious", "note": "quantum-vulnerable RSA-2048 in inventory", "text": "crypto-inventory: tls cert uses RSA-2048 for key exchange on the payments API gateway."}
+{"id": "m02", "label": "malicious", "note": "weak ECDSA curve without hybrid", "text": "Signature algorithm: ECDSA-P256 (secp256r1). No hybrid PQC qualifier configured."}
+{"id": "m03", "label": "malicious", "note": "deprecated SHA-1 signing", "text": "ca_signature_hash = SHA-1\nintegrity_mac = hmac-md5"}
+{"id": "m04", "label": "malicious", "note": "weak symmetric cipher 3DES + RC4", "text": "Allowed ciphers: 3DES-CBC, RC4, AES-128-ECB for the legacy VPN concentrator."}
+{"id": "m05", "label": "malicious", "note": "non-constant-time MAC compare (timing leak)", "text": "Auth check compares the HMAC with == : if token == expected_mac: grant(). Variable-time comparison."}
+{"id": "m06", "label": "malicious", "note": "textbook RSA naive modexp", "text": "We implement textbook RSA with a naive modpow loop for the firmware signature verify."}
+{"id": "m07", "label": "malicious", "note": "no TEE / keys in plaintext", "text": "confidential-computing: tee=disabled. private_key stored in plaintext on disk, no HSM."}
+{"id": "m08", "label": "malicious", "note": "explicitly no PQC / crypto-agility", "text": "roadmap: post-quantum = not-planned; crypto_agility=false; kyber: none."}
+{"id": "m09", "label": "malicious", "note": "obsolete TLS allowed", "text": "nginx ssl_protocols TLSv1.0 TLSv1.1 SSLv3; padding-oracle exposure on the admin portal."}
+{"id": "m10", "label": "malicious", "note": "static IV / hardcoded nonce", "text": "aes config: mode=CBC, static iv = 0x00000000000000000000000000000000, reused key across sessions."}
+{"id": "m11", "label": "malicious", "note": "advisory: ECDH P256 + SHA1 chain", "text": "Advisory: appliance negotiates ecdh-p256 and signs OCSP responses with sha1; recommend rotation."}
+{"id": "b01", "label": "benign", "note": "modern PQC-safe config — must NOT match", "text": "tls: protocol TLS1.3, key_exchange X25519, cipher AES-256-GCM, hash SHA-384, hybrid-pqc=enabled (ML-KEM)."}
+{"id": "b02", "label": "benign", "note": "hardened crypto inventory — strong primitives", "text": "crypto-inventory: signatures use RSA-4096 and Ed25519; integrity via SHA-256; all keys in HSM."}
+{"id": "b03", "label": "benign", "note": "TEE enabled, constant-time", "text": "confidential-computing: tee=enabled (SGX enclave). Comparisons use constant-time hmac.compare_digest()."}
+{"id": "b04", "label": "benign", "note": "crypto-agility roadmap positive", "text": "Roadmap: crypto-agility=true, post-quantum migration planned for 2026 with Dilithium (ML-DSA) signatures."}
+{"id": "b05", "label": "benign", "note": "generic deploy doc, no crypto", "text": "Deployment: scale the web tier to 5 replicas and enable autoscaling on CPU > 70 percent."}
+{"id": "b06", "label": "benign", "note": "third-person history mentioning algorithm names safely", "text": "AES-256 in GCM mode provides authenticated encryption and is the recommended baseline cipher."}
+{"id": "b07", "label": "benign", "note": "incident prose without weak primitives", "text": "The runbook describes rotating credentials and revoking certificates after a suspected compromise."}

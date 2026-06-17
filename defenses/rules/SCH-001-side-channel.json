@@ -1,0 +1,62 @@
+{
+  "rule_id": "SCH-001",
+  "title": "Side-channel & crypto-agility / PQC-readiness gap detector",
+  "version": "1.0",
+  "covers_threat": "THR-f9d3875d",
+  "covers_category": "side-channel",
+  "covers_techniques": ["power-analysis", "timing-packet-analysis"],
+  "intent": "DETECT side-channel risk and crypto-agility / post-quantum gaps in INGESTED config / inventory / advisory text (quantum-vulnerable algorithms, non-constant-time crypto, missing TEE for sensitive compute, timing-leak-prone patterns). Output is a verdict (data) only; matched text is never elevated to an instruction. Reinforces the deterministic boundary in docs/SELF-DEFENSE.md.",
+  "scope": "ingested_config_inventory_advisory_text",
+  "action_on_match": ["flag", "inventory", "require_crypto_review"],
+  "patterns": [
+    {
+      "id": "SCH-001.quantum-vulnerable-pubkey",
+      "severity": "high",
+      "desc": "Quantum-vulnerable / undersized public-key crypto in use (RSA-1024/2048, weak ECDSA/ECDH curves) without a hybrid-PQC qualifier.",
+      "regex": "(?i)\\b(?:rsa[\\s_-]?(?:1024|2048)|ecdsa[\\s_-]?(?:p[\\s_-]?256|secp256r1)|ecdh[\\s_-]?p?256|prime256v1|secp256r1)\\b"
+    },
+    {
+      "id": "SCH-001.deprecated-hash",
+      "severity": "high",
+      "desc": "Broken / deprecated hash or MAC primitive (MD5, SHA-1) configured for signing or integrity.",
+      "regex": "(?i)\\b(?:md5|sha-?1|hmac[\\s_-]?(?:md5|sha-?1))\\b"
+    },
+    {
+      "id": "SCH-001.weak-cipher",
+      "severity": "high",
+      "desc": "Weak / legacy symmetric cipher or mode (3DES/DES, RC4, ECB, export/NULL ciphers).",
+      "regex": "(?i)\\b(?:3des|triple[\\s_-]?des|\\bdes-cbc\\b|\\brc4\\b|[a-z0-9]+[\\s_-]?ecb|null[\\s_-]?cipher|export[\\s_-]?(?:cipher|grade))\\b"
+    },
+    {
+      "id": "SCH-001.non-constant-time",
+      "severity": "high",
+      "desc": "Non-constant-time comparison / crypto primitive — power- or timing-analysis exposure.",
+      "regex": "(?i)(?:non[\\s_-]?constant[\\s_-]?time|variable[\\s_-]?time|timing[\\s_-]?(?:unsafe|leak)|naive\\s+(?:rsa|modpow|modexp)|textbook\\s+rsa|(?:==|\\.equals\\(|strcmp|memcmp)[^\\n]{0,40}\\b(?:mac|hmac|tag|signature|token|secret|password|digest)\\b)"
+    },
+    {
+      "id": "SCH-001.missing-tee",
+      "severity": "medium",
+      "desc": "Sensitive key/compute material handled outside a TEE / confidential-computing enclave (keys in plaintext / no HSM / no enclave).",
+      "regex": "(?i)(?:no[\\s_-]?(?:tee|enclave|hsm|sgx|sev|secure[\\s_-]?enclave)\\b|(?:tee|enclave|hsm|confidential[\\s_-]?comput\\w*)\\s*[:=]\\s*(?:false|off|none|disabled)|(?:private[\\s_-]?key|key[\\s_-]?material|master[\\s_-]?key)[^\\n]{0,40}\\b(?:plaintext|cleartext|in[\\s_-]?memory|on[\\s_-]?disk|unencrypted)\\b)"
+    },
+    {
+      "id": "SCH-001.no-pqc-agility",
+      "severity": "medium",
+      "desc": "Explicitly no post-quantum / hybrid-PQC migration plan or crypto-agility for key exchange / signatures.",
+      "regex": "(?i)(?:(?:pqc|post[\\s_-]?quantum|hybrid[\\s_-]?(?:pqc|kem|key[\\s_-]?exchange)|crypto[\\s_-]?agility|kyber|ml[\\s_-]?kem|dilithium|ml[\\s_-]?dsa)\\s*[:=]\\s*(?:false|off|none|no|disabled|not[\\s_-]?planned)|no\\s+(?:pqc|post[\\s_-]?quantum|crypto[\\s_-]?agility|migration\\s+plan))"
+    },
+    {
+      "id": "SCH-001.weak-tls",
+      "severity": "medium",
+      "desc": "Obsolete TLS/SSL protocol version permitted (SSLv2/3, TLS 1.0/1.1) — downgrade / padding-oracle timing exposure.",
+      "regex": "(?i)\\b(?:ssl\\s?v?[23]|sslv?[23]|tls[\\s_-]?1[._]?[01](?![._]?[23])|tlsv1[._]?[01])\\b"
+    },
+    {
+      "id": "SCH-001.static-iv-key",
+      "severity": "high",
+      "desc": "Hardcoded / static IV, nonce, or symmetric key — enables differential / replay and side-channel recovery.",
+      "regex": "(?i)(?:(?:static|hardcoded|fixed|reused?)[\\s_-]?(?:iv|nonce|key|salt)\\b|(?:iv|nonce)\\s*[:=]\\s*(?:\"|')?(?:0x)?[0-9a-f]{8,})"
+    }
+  ],
+  "verdict_rule": "risky/malicious if any pattern matches; classification is advisory (data), routed to action_on_match (flag/inventory/require_crypto_review). False-positive policy: modern PQC-safe / hardened config (e.g. RSA-4096, X25519, AES-256-GCM, SHA-256/384, TLS 1.3, hybrid-PQC enabled, TEE enabled, constant-time) must NOT match (see verify suite)."
+}

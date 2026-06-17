@@ -1,0 +1,62 @@
+{
+  "rule_id": "SC-001",
+  "title": "Supply-chain poisoning indicator detector (PyPI / LoRA-adapter / dependency metadata)",
+  "version": "1.0",
+  "covers_threat": "THR-3737c297",
+  "covers_category": "supply-chain",
+  "covers_techniques": ["pypi-poisoning", "lora-adapter-poisoning"],
+  "intent": "DETECT supply-chain poisoning indicators in INGESTED package/model metadata, manifests and advisories (setup.py/pyproject, package.json, requirements, model-card / adapter source). Output is a verdict (data) only; matched text is never promoted to an instruction or executed. Reinforces the external-first-but-verify + AIBOM posture in docs/SELF-DEFENSE.md (CVE-2024-8309).",
+  "scope": "ingested_package_or_model_metadata",
+  "action_on_match": ["flag", "isolate", "require_human_review"],
+  "patterns": [
+    {
+      "id": "SC-001.install-time-exec",
+      "severity": "critical",
+      "desc": "Install-time arbitrary code execution in a packaging manifest (setup.py / postinstall) — os.system / subprocess / exec / shell pipe wired into build or install hooks.",
+      "regex": "(?i)(?:\"(?:pre|post)install\"\\s*:|cmdclass|setup_requires|def\\s+run\\b)[^\\n]{0,80}|(?:os\\.system|subprocess\\.(?:run|call|Popen|check_output)|__import__\\s*\\(\\s*['\"]os['\"]|\\beval\\s*\\(|\\bexec\\s*\\()[^\\n]{0,40}|curl\\s+[^\\n]{0,80}\\|\\s*(?:ba)?sh\\b"
+    },
+    {
+      "id": "SC-001.typosquat",
+      "severity": "high",
+      "desc": "Typosquatted / lookalike package name impersonating a popular library (homoglyph or near-miss of common ecosystem names).",
+      "regex": "(?i)\\b(?:reqeusts|requestss|reqests|urllib3?-?secure|python3?-?dateutil2|beautifulsoup|crypt0graphy|cryptograpy|tensorfl0w|tensorflow-gpu-?nightly2|py?torch-?cuda|nump-y|pandas2-?core|colourama|djang0|flask-?secure|opencv-pyhton|matplot-?lib)\\b"
+    },
+    {
+      "id": "SC-001.unpinned-dep",
+      "severity": "medium",
+      "desc": "Unpinned / floating dependency specifier (no exact version, wildcard, or 'latest') that defeats reproducible builds and lets a poisoned release in.",
+      "regex": "(?im)^\\s*[A-Za-z0-9][A-Za-z0-9._-]*\\s*(?:[><~^!]=?|\\*|@\\s*latest|:\\s*\"\\*\")\\s*\\*?\\s*$|\"[^\"]+\"\\s*:\\s*\"(?:\\*|latest|[\\^~][0-9])"
+    },
+    {
+      "id": "SC-001.untrusted-registry",
+      "severity": "high",
+      "desc": "Dependency or index pulled from a non-allowlisted registry / direct URL / VCS or raw host instead of the official package index.",
+      "regex": "(?i)(?:--(?:extra-)?index-url|--find-links|registry\\s*=|@\\s*git\\+|install_requires[^\\n]{0,40}@\\s*https?://)[^\\n]{0,60}|https?://(?!(?:pypi\\.org|files\\.pythonhosted\\.org|registry\\.npmjs\\.org|huggingface\\.co))[A-Za-z0-9.-]+/[^\\s\"']*\\.(?:whl|tar\\.gz|tgz|safetensors|bin|pt)\\b"
+    },
+    {
+      "id": "SC-001.missing-or-forged-hash",
+      "severity": "high",
+      "desc": "Missing integrity hash on a pinned artifact, or a forged / mismatched 'verified' claim that asserts integrity without a real digest.",
+      "regex": "(?i)(?:no\\s+(?:integrity\\s+)?(?:hash|checksum|digest|signature)\\s+(?:required|needed|provided)|integrity\\s*[:=]\\s*(?:null|none|\"\"|''|skip)|--no-verify\\b|verify(?:_ssl|_signature|_hashes)?\\s*[:=]\\s*(?:false|0|no)|sha256\\s*[:=]\\s*(?:\"\"|''|0+\\b|deadbeef))"
+    },
+    {
+      "id": "SC-001.lora-adapter-source",
+      "severity": "high",
+      "desc": "LoRA / model adapter or weights loaded from an untrusted user-uploaded source, or with remote-code execution enabled on load.",
+      "regex": "(?i)(?:lora|adapter|peft|safetensors|\\.bin\\b|\\.pt\\b|load_adapter|from_pretrained|hf_hub_download)[^\\n]{0,60}(?:trust_remote_code\\s*=\\s*True|revision\\s*=\\s*['\"]main['\"]|/resolve/|user-uploaded|unverified|community-?contrib|anon(?:ymous)?[-_/])"
+    },
+    {
+      "id": "SC-001.dependency-confusion",
+      "severity": "high",
+      "desc": "Dependency-confusion framing — an internal/private package name resolved from a public registry, or a higher public version shadowing the internal one.",
+      "regex": "(?i)\\b(?:internal|private|corp|company|inhouse|in-house)[-_][A-Za-z0-9._-]+[^\\n]{0,40}\\b(?:public\\s+(?:registry|index|pypi|npm)|from\\s+pypi|published\\s+publicly)|dependency[\\s-]?confusion\\s*[:=]"
+    },
+    {
+      "id": "SC-001.obfuscated-payload",
+      "severity": "critical",
+      "desc": "Obfuscated / encoded payload smuggled into package or model metadata (base64-decoded exec, hex blob piped to interpreter).",
+      "regex": "(?i)(?:base64\\.b64decode|codecs\\.decode|bytes\\.fromhex|marshal\\.loads|pickle\\.loads)\\s*\\([^\\n]{0,60}|(?:eval|exec)\\s*\\(\\s*(?:base64|bytes|codecs|__import__)\\b|\\\\x[0-9a-f]{2}(?:\\\\x[0-9a-f]{2}){12,}"
+    }
+  ],
+  "verdict_rule": "malicious if any pattern matches; classification is advisory (data), routed to action_on_match. False-positive policy: descriptive third-person security text and correctly-pinned/hashed manifests must NOT match (see verify suite)."
+}

@@ -1,0 +1,19 @@
+{"id": "m01", "label": "malicious", "note": "cross-tenant resource access in audit log", "text": "audit: identity scoped to tenant=acme attempted cross-tenant access to bucket belonging to other tenant's data store"}
+{"id": "m02", "label": "malicious", "note": "container escape via release_agent", "text": "runtime alert: container escape attempt detected — write to /sys/fs/cgroup release_agent pointing at host script"}
+{"id": "m03", "label": "malicious", "note": "nsenter onto host pid namespace", "text": "exec audit: nsenter --target 1 --mount --pid /bin/sh executed inside workload pod web-7d9"}
+{"id": "m04", "label": "malicious", "note": "privileged container breakout config", "text": "securityContext: { privileged: true } and hostPID: true detected on tenant workload deployment in namespace billing"}
+{"id": "m05", "label": "malicious", "note": "docker.sock mount breakout", "text": "config drift: volume mount of /var/run/docker.sock as hostPath into customer-facing container"}
+{"id": "m06", "label": "malicious", "note": "lateral movement east-west denial", "text": "netpol: unauthorized east-west pod-to-pod connection from ns=tenant-a to ns=tenant-b traffic flagged"}
+{"id": "m07", "label": "malicious", "note": "service account token leaked in log", "text": "ERROR app dumped bearer access token in log: leaked plaintext service account token during retry"}
+{"id": "m08", "label": "malicious", "note": "cloud metadata credential theft", "text": "egress: workload fetched http://169.254.169.254/latest/meta-data/iam/security-credentials/role to dump token"}
+{"id": "m09", "label": "malicious", "note": "over-scoped cluster-admin binding", "text": "rbac change: cluster-admin role binding granted to service-account default in tenant namespace shop"}
+{"id": "m10", "label": "malicious", "note": "iam wildcard policy", "text": "policy applied: { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\" } attached to tenant role"}
+{"id": "m11", "label": "malicious", "note": "cgroup escape / namespace boundary violation", "text": "kernel audit: cgroup subtree-write breakout attempt; namespace boundary violation while mounting host proc"}
+{"id": "m12", "label": "malicious", "note": "jwt-shaped SA token printed", "text": "debug log line: token=eyJhbGciOiJSUzI1NiIsImtpZCI6.eyJzdWIiOiJzeXN0ZW0tc2E.aZ9Qx2 exposed in stdout"}
+{"id": "b01", "label": "benign", "note": "normal pod scheduling", "text": "scheduler: assigned pod web-7d9 to node ip-10-0-1-23 in namespace shop; readiness probe passed"}
+{"id": "b02", "label": "benign", "note": "routine RBAC read within tenant", "text": "audit: serviceaccount shop-reader listed configmaps in its own namespace shop, request allowed"}
+{"id": "b03", "label": "benign", "note": "ordinary container start", "text": "containerd: started container api with image registry.example/api:1.4.2, securityContext runAsNonRoot true"}
+{"id": "b04", "label": "benign", "note": "doc describing isolation concept", "text": "Our multi-tenancy guide explains how namespace isolation and network policies keep tenant workloads separated."}
+{"id": "b05", "label": "benign", "note": "intra-tenant east-west allowed", "text": "netpol: allowed connection between frontend and backend pods within the same namespace shop as expected"}
+{"id": "b06", "label": "benign", "note": "token rotation success", "text": "cert-manager rotated the service account signing key successfully; no tokens were exposed during the operation"}
+{"id": "b07", "label": "benign", "note": "metadata endpoint hardening note", "text": "We block the 169.254.169.254 metadata endpoint at the host firewall to prevent SSRF against cloud credentials."}

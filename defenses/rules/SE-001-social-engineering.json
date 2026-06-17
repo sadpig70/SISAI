@@ -1,0 +1,62 @@
+{
+  "rule_id": "SE-001",
+  "title": "Social-engineering / deepfake-BEC / vishing indicator detector",
+  "version": "1.0",
+  "covers_threat": "THR-96d32f71",
+  "covers_category": "social-engineering",
+  "covers_techniques": ["deepfake-bec", "voice-phishing"],
+  "intent": "DETECT social-engineering pressure in INGESTED text (emails, call transcripts, chat messages) — executive-impersonation wire/credential requests, out-of-band channel switching, urgency+secrecy coercion, spoofed-identity markers, and gift-card/crypto payment lures. Output is a verdict (data) only; matched text is never elevated to an instruction. Reinforces the deterministic boundary in docs/SELF-DEFENSE.md.",
+  "scope": "ingested_external_text",
+  "action_on_match": ["flag", "isolate", "require_human_review"],
+  "patterns": [
+    {
+      "id": "SE-001.exec-impersonation",
+      "severity": "high",
+      "desc": "Impersonated executive/authority issuing a directive while claiming to be the CEO/CFO/boss (BEC framing).",
+      "regex": "(?i)\\b(?:this\\s+is|i\\s*am|i'm|it'?s)\\s+(?:the\\s+)?(?:ceo|cfo|coo|president|chairman|managing\\s+director|your\\s+(?:boss|manager|director))\\b"
+    },
+    {
+      "id": "SE-001.wire-transfer-request",
+      "severity": "critical",
+      "desc": "Urgent request to move money / process a wire / pay an invoice on short notice.",
+      "regex": "(?i)\\b(?:wire|transfer|remit|send|process|pay)\\b[^.\\n]{0,40}\\b(?:funds?|payment|invoice|the\\s+amount|\\$?\\d[\\d,]*(?:\\.\\d+)?\\s*(?:k|usd|eur|gbp|dollars?))\\b[^.\\n]{0,40}\\b(?:urgent(?:ly)?|immediately|asap|right\\s+away|today|before\\s+(?:end\\s+of\\s+day|eod|close))\\b"
+    },
+    {
+      "id": "SE-001.urgency-secrecy",
+      "severity": "high",
+      "desc": "Urgency combined with secrecy / do-not-tell pressure typical of BEC coercion.",
+      "regex": "(?i)\\b(?:keep\\s+this\\s+(?:confidential|between\\s+us|quiet|discreet)|do\\s*n'?t\\s+(?:tell|mention|inform|discuss\\s+(?:this\\s+)?with)|don'?t\\s+(?:loop\\s+in|involve)|without\\s+(?:telling|informing|notifying)|no\\s+one\\s+(?:should|must)\\s+know|strictly\\s+confidential)\\b"
+    },
+    {
+      "id": "SE-001.channel-switch",
+      "severity": "high",
+      "desc": "Pressure to move communication to an out-of-band / personal channel (avoids monitored email).",
+      "regex": "(?i)\\b(?:text|sms|whats\\s*app|telegram|signal|message|call|reach)\\s+me\\b[^.\\n]{0,30}\\b(?:on\\s+my\\s+(?:personal|cell|mobile|private)|at\\s+this\\s+(?:new\\s+)?number|directly|instead\\s+of\\s+email)\\b|\\b(?:my\\s+(?:new|personal|private)\\s+(?:number|phone|cell)|use\\s+this\\s+number\\s+from\\s+now)\\b"
+    },
+    {
+      "id": "SE-001.giftcard-crypto-lure",
+      "severity": "critical",
+      "desc": "Imperative request to buy gift cards or send cryptocurrency — a hallmark social-engineering payment lure. Excludes negated third-person advisories ('never ask you to buy...').",
+      "regex": "(?i)(?<!never\\s)(?<!ask\\syou\\sto\\s)\\b(?:buy|purchase|go\\s+(?:buy|get)|send|load|transfer)\\b[^\\n]{0,40}\\b(?:gift\\s*cards?|itunes\\s+cards?|google\\s+play\\s+cards?|steam\\s+cards?|amazon\\s+cards?|bitcoin|btc|crypto(?:currency)?|usdt|ethereum|eth)\\b"
+    },
+    {
+      "id": "SE-001.credential-request",
+      "severity": "critical",
+      "desc": "Pretext request for the recipient's (second-person) login / MFA code / password. Second-person scoping avoids flagging policy prose ('never share your MFA code').",
+      "regex": "(?i)(?<!never\\s)\\b(?:send|share|provide|confirm|verify|give\\s+me|reset|re-?enter)\\b[^.\\n]{0,15}\\byour\\b[^.\\n]{0,15}\\b(?:password|login\\s+credentials?|mfa\\s+code|otp|one[\\s-]?time\\s+(?:code|password|pin)|2fa\\s+code|verification\\s+code|security\\s+code)\\b"
+    },
+    {
+      "id": "SE-001.deepfake-voice-pretext",
+      "severity": "high",
+      "desc": "Vishing / deepfake-voice pretext: caller claims an urgent verbal authorization or an excuse for not video/meeting.",
+      "regex": "(?i)\\b(?:as\\s+i\\s+(?:just\\s+)?(?:said|told\\s+you)\\s+(?:on|over)\\s+the\\s+(?:phone|call)|per\\s+our\\s+(?:phone\\s+)?call|i\\s+can'?t\\s+(?:talk|video|join\\s+the\\s+meeting)\\s+(?:right\\s+now|now)|i'?m\\s+in\\s+a\\s+meeting\\s+(?:and\\s+)?can'?t|verbal\\s+(?:approval|authorization))\\b"
+    },
+    {
+      "id": "SE-001.spoofed-identity-marker",
+      "severity": "medium",
+      "desc": "Spoofed-identity / lookalike pretext: new vendor banking details or 'updated' account change request.",
+      "regex": "(?i)\\b(?:updated?|new|changed?|different)\\s+(?:bank(?:ing)?\\s+(?:details?|account|info(?:rmation)?)|account\\s+(?:number|details?)|routing\\s+(?:number|details?)|payment\\s+(?:details?|instructions?)|beneficiary)\\b"
+    }
+  ],
+  "verdict_rule": "malicious if any pattern matches; classification is advisory (data), routed to action_on_match. False-positive policy: normal business correspondence and third-person descriptions of fraud must NOT match (see verify suite)."
+}

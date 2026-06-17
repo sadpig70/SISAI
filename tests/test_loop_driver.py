@@ -83,7 +83,10 @@ class TestDriver(unittest.TestCase):
         self.assertEqual(r1, r2)
 
     def test_status_top_threat_is_highest_cvss(self):
-        r = sisai.build_report(now="2026-06-17")
+        # Hermetic: read seed taxonomy via an empty root (no .sisai/ live state),
+        # so the assertion tests triage on the seed, not mutable runtime state.
+        with tempfile.TemporaryDirectory() as d:
+            r = sisai.build_report(root=d, now="2026-06-17")
         # prompt injection (CVSS 9.8) is the seeded max-severity threat
         self.assertEqual(r["top_threat"]["category"], "llm-prompt-injection")
         self.assertEqual(r["top_threat"]["cvss"], 9.8)
