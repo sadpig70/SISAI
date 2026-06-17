@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 560" font-family="'Segoe UI','Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 z" fill="#5b6b7b"/>
+    </marker>
+    <marker id="arrFb" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,3.2 L0,6.4 z" fill="#c0552d"/>
+    </marker>
+  </defs>
+
+  <!-- backdrop (keeps it readable in GitHub dark mode) -->
+  <rect x="0" y="0" width="920" height="560" rx="14" fill="#ffffff"/>
+  <rect x="0.5" y="0.5" width="919" height="559" rx="14" fill="none" stroke="#e3e7ec"/>
+
+  <!-- title -->
+  <text x="460" y="38" text-anchor="middle" font-size="20" font-weight="700" fill="#1f2a37">SISAI — 세 가닥 ⊕ 단일 백본 (수렴 없는 나선)</text>
+
+  <!-- ===== Strand A : ThreatIntel ===== -->
+  <rect x="30" y="64" width="268" height="96" rx="10" fill="#e9f1fb" stroke="#2f6fb0" stroke-width="1.6"/>
+  <rect x="30" y="64" width="268" height="26" rx="10" fill="#2f6fb0"/>
+  <rect x="30" y="78" width="268" height="12" fill="#2f6fb0"/>
+  <text x="164" y="82" text-anchor="middle" font-size="14.5" font-weight="700" fill="#ffffff">가닥 A · ThreatIntel</text>
+  <text x="164" y="116" text-anchor="middle" font-size="14" fill="#1f2a37">채널 스캔 → 위협 수집·분류</text>
+  <text x="164" y="140" text-anchor="middle" font-size="11.5" fill="#5b6b7b">(triage · 사각지대 감시)</text>
+
+  <!-- ===== Strand B : DefenseSynth ===== -->
+  <rect x="326" y="64" width="268" height="96" rx="10" fill="#e9f6ee" stroke="#2e8b57" stroke-width="1.6"/>
+  <rect x="326" y="64" width="268" height="26" rx="10" fill="#2e8b57"/>
+  <rect x="326" y="78" width="268" height="12" fill="#2e8b57"/>
+  <text x="460" y="82" text-anchor="middle" font-size="14.5" font-weight="700" fill="#ffffff">가닥 B · DefenseSynth</text>
+  <text x="460" y="116" text-anchor="middle" font-size="14" fill="#1f2a37">외부 탐색 → 없으면 자체 설계</text>
+  <text x="460" y="140" text-anchor="middle" font-size="11.5" fill="#5b6b7b">(external-first → pgf design)</text>
+
+  <!-- ===== Strand C : DetectOps ===== -->
+  <rect x="622" y="64" width="268" height="96" rx="10" fill="#f3ecfb" stroke="#7a4fb0" stroke-width="1.6"/>
+  <rect x="622" y="64" width="268" height="26" rx="10" fill="#7a4fb0"/>
+  <rect x="622" y="78" width="268" height="12" fill="#7a4fb0"/>
+  <text x="756" y="82" text-anchor="middle" font-size="14.5" font-weight="700" fill="#ffffff">가닥 C · DetectOps</text>
+  <text x="756" y="116" text-anchor="middle" font-size="14" fill="#1f2a37">탐지 규칙/리포트 운영</text>
+  <text x="756" y="140" text-anchor="middle" font-size="11.5" fill="#5b6b7b">(성과 → 코퍼스 환류)</text>
+
+  <!-- converging arrows : strands -> backbone -->
+  <path d="M164,160 L330,214" fill="none" stroke="#5b6b7b" stroke-width="1.8" marker-end="url(#arr)"/>
+  <path d="M460,160 L460,214" fill="none" stroke="#5b6b7b" stroke-width="1.8" marker-end="url(#arr)"/>
+  <path d="M756,160 L590,214" fill="none" stroke="#5b6b7b" stroke-width="1.8" marker-end="url(#arr)"/>
+
+  <!-- ===== Backbone (core/) ===== -->
+  <rect x="140" y="218" width="640" height="92" rx="12" fill="#1f2a37"/>
+  <text x="460" y="252" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">백본 (core/) — 단일 출처 결정론 substrate</text>
+  <text x="460" y="284" text-anchor="middle" font-size="14" fill="#b8c4d2" letter-spacing="0.3">channels · ledger · diversity · triage · provenance · loop</text>
+
+  <!-- determinism note -->
+  <text x="460" y="330" text-anchor="middle" font-size="11.5" fill="#5b6b7b">결정론 경계 = 인젝션 1차 방어 (수집 텍스트는 제어흐름 불변) · defensive-only</text>
+
+  <!-- feedback pill -->
+  <rect x="150" y="402" width="620" height="62" rx="12" fill="#fbeee6" stroke="#c0552d" stroke-width="1.6"/>
+  <text x="460" y="428" text-anchor="middle" font-size="13.5" font-weight="700" fill="#9c3f1c">검증된 방어 → 코퍼스 환류 (염기쌍)</text>
+  <text x="460" y="450" text-anchor="middle" font-size="13" fill="#9c3f1c">→ 다음 턴이 복리로 더 나은 방어 합성 (수렴 없는 나선)</text>
+
+  <!-- backbone -> feedback (down) -->
+  <path d="M460,310 L460,400" fill="none" stroke="#c0552d" stroke-width="2" marker-end="url(#arrFb)"/>
+
+  <!-- feedback -> strands (spiral return up the left) -->
+  <path d="M150,433 C40,433 40,112 158,112" fill="none" stroke="#c0552d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrFb)"/>
+  <!-- feedback -> strand C (spiral return up the right) -->
+  <path d="M770,433 C880,433 880,112 762,112" fill="none" stroke="#c0552d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrFb)"/>
+
+  <text x="460" y="500" text-anchor="middle" font-size="11" fill="#8a98a6">채널은 1급 자산 — 발굴(discover) · 기록(ledger) · 재사용(reuse)</text>
+</svg>

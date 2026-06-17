@@ -11,6 +11,12 @@ HELIX의 explore⊕exploit 나선 *패턴*을 계승하되 **코드 의존은 0 
 
 ## 세 가닥 (3 strands) + 백본
 
+<p align="center">
+  <img src="assets/sisai-strands.svg" alt="SISAI 세 가닥(가닥 A ThreatIntel 채널 스캔→위협 수집, 가닥 B DefenseSynth 외부 탐색→없으면 자체설계, 가닥 C DetectOps 탐지 규칙/리포트 운영)이 단일 결정론 백본(core/ — channels·ledger·diversity·triage·provenance·loop)으로 수렴하고, 검증된 방어가 코퍼스로 환류(염기쌍)되어 다음 턴이 복리로 더 나은 방어를 합성하는 수렴 없는 나선" width="92%">
+</p>
+
+<details><summary>같은 그림 (텍스트)</summary>
+
 ```
    가닥 A (ThreatIntel)        가닥 B (DefenseSynth)        가닥 C (DetectOps)
    채널 스캔 → 위협 수집        외부 탐색 → 없으면 자체설계      탐지 규칙/리포트 운영
@@ -19,6 +25,8 @@ HELIX의 explore⊕exploit 나선 *패턴*을 계승하되 **코드 의존은 0 
           \  channels·ledger·diversity·triage·provenance·loop /
    검증된 방어 → 코퍼스 환류(염기쌍) → 다음 턴이 복리로 더 나은 방어 합성 (수렴 없는 나선)
 ```
+
+</details>
 
 - **채널은 1급 자산**: 발굴(discover) → 기록(ledger) → 재사용(reuse). 고정 목록이 아니다.
 - **외부 우선 → 자체 설계**: 해결책은 외부 코퍼스에서 먼저 찾고, 없으면 pgf full-cycle로 만든다.
