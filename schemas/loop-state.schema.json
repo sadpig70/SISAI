@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SISAI loop state (input to next_action)",
+  "type": "object",
+  "properties": {
+    "pending_verified_defense": {"type": "boolean"},
+    "should_discover_channels": {"type": "boolean"},
+    "coverage": {"type": "object", "properties": {"repair_required": {"type": "boolean"}}},
+    "untriaged_threats": {"type": "integer", "minimum": 0},
+    "active_channels": {"type": "integer", "minimum": 0},
+    "top_threat": {"type": ["object", "null"]}
+  }
+}

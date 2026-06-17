@@ -1,0 +1,13 @@
+{
+  "defense_id": "DEF-pi-filter-001",
+  "title": "Indirect prompt-injection input filter",
+  "kind": "designed",
+  "controls": ["input-isolation", "tool-allowlist", "instruction-data-separation"],
+  "covers_threat": "THR-promptinjection",
+  "covers_category": "llm-prompt-injection",
+  "covers_techniques": ["indirect-injection"],
+  "origin": "pgf",
+  "source_channels": ["CH-owasp-llm"],
+  "verification": {"method": "redteam-suite", "passed": true},
+  "implementations": [{"rule_id": "PI-001", "artifact_path": "rules/pi_001.yaml"}]
+}

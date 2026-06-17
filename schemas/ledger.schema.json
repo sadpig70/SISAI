@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SISAI reuse ledger (handled threats / built defenses / known channels)",
+  "type": "object",
+  "required": ["schema_version", "entries", "by_fingerprint", "blocked_titles"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["entry_id", "kind", "title"],
+        "properties": {
+          "entry_id": {"type": "string"},
+          "kind": {"type": "string", "enum": ["threat", "defense", "channel", "unknown"]},
+          "title": {"type": "string"},
+          "fingerprint": {"type": "string"},
+          "recorded_at": {"type": "string"},
+          "implementations": {"type": "array", "items": {"type": "object"}}
+        }
+      }
+    },
+    "by_fingerprint": {"type": "object"},
+    "blocked_titles": {"type": "array", "items": {"type": "string"}}
+  }
+}

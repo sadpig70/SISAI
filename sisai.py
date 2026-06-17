@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+"""SISAI driver — wire the three strands to the backbone and report the next turn.
+
+Reads the channel registry, collected threats and defense corpus (seed fixtures, or
+live `.sisai/` artifacts), runs one deterministic turn: triage threats, measure
+attack-surface coverage, decide external-first defense plans, and compute the next
+loop action. Also the actuator for closing the loop (record a verified defense and
+feed it back to the corpus).
+
+Determinism: build_report is a pure function of inputs. Wall-clock is read ONLY at
+the CLI edge (`--now` overrides). No network/AI here — collection/design is the AI
+meta-layer (skills); this is the backbone control plane.
+
+CLI:
+    python sisai.py status
+    python sisai.py plan
+    python sisai.py discover-channel --channel ch.json --registry .sisai/channels.json
+    python sisai.py record-defense --defense def.json --ledger .sisai/ledger.json --corpus .sisai/corpus.json
+"""
+
+import json
+import os
+import sys
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, ROOT)
+
+from core.sisai_io import atomic_write_json, read_json                  # noqa: E402
+from core.sisai_ledger import (                                          # noqa: E402
+    empty_ledger, is_consumed, append_entry, reindex_ledger,
+)
+from core.sisai_channels import (                                        # noqa: E402
+    register_channel, active_channels, kind_coverage, should_discover_channels,
+    missing_kinds,
+)
+from core.sisai_triage import rank_threats, top_threat, measure_coverage  # noqa: E402
+from core.sisai_provenance import defense_to_corpus_entry, is_verified   # noqa: E402
+from core.sisai_loop import next_action, plan_defense                    # noqa: E402
+from engines.adapters import (                                           # noqa: E402
+    channels_seed_to_registry, threats_seed_to_list, defenses_seed_to_corpus,
+)
+
+SEED = os.path.join(ROOT, "seed")
+
+
+def _load(root, live_name, seed_name):
+    """Prefer a live .sisai/ artifact, else fall back to the shipped seed."""
+    live = read_json(os.path.join(root, ".sisai", live_name))
+    if live is not None:
+        return live
+    return read_json(os.path.join(SEED, seed_name))
+
+
+def build_report(root=None, now="1970-01-01") -> dict:
+    """One deterministic SISAI turn over the current channel/threat/defense state."""
+    root = root or ROOT
+    registry = _load(root, "channels.json", "channels.json")
+    if isinstance(registry, list):  # seed format -> registry
+        registry = channels_seed_to_registry(registry, now=now)
+    threats = threats_seed_to_list(_load(root, "threats.json", "threats.json"))
+    corpus = defenses_seed_to_corpus(_load(root, "defenses.json", "defenses.json"))
+    ledger = read_json(os.path.join(root, ".sisai", "ledger.json")) or empty_ledger()
+    reindex_ledger(ledger)
+
+    # triage + coverage (blind-spot guard)
+    ranked = rank_threats(threats, now)
+    coverage = measure_coverage(threats)
+    # untriaged = threats not yet defended (not in ledger)
+    untriaged = [t for t in threats
+                 if not is_consumed({"title": t["title"], "fingerprint": t["fingerprint"]}, ledger)["consumed"]]
+    top = top_threat(untriaged, now)
+
+    state = {
+        "pending_verified_defense": False,
+        "should_discover_channels": should_discover_channels(registry),
+        "coverage": coverage,
+        "untriaged_threats": len(untriaged),
+        "active_channels": len(active_channels(registry)),
+        "top_threat": top,
+    }
+    action = next_action(state)
+
+    plan = plan_defense(top, corpus, ledger) if top else None
+    return {
+        "channels": {"active": len(active_channels(registry)),
+                     "kinds": kind_coverage(registry), "missing_kinds": missing_kinds(registry)},
+        "threats": {"total": len(threats), "untriaged": len(untriaged)},
+        "coverage": coverage,
+        "top_threat": ({"threat_id": top["threat_id"], "title": top["title"],
+                        "category": top["category"], "cvss": top.get("cvss"),
+                        "score": ranked[0]["score"]} if top else None),
+        "defense_plan": plan,
+        "next_action": action,
+    }
+
+
+def record_defense(defense: dict, ledger_path: str, corpus_path: str, now: str) -> dict:
+    """Actuator: record a VERIFIED defense to the ledger + feed it back to the corpus.
+
+    Idempotent — re-running on an already-recorded defense is a no-op. Only verified
+    + implemented defenses are accepted (defensive discipline). `now` injected.
+    """
+    if not is_verified(defense):
+        return {"status": "rejected", "why": "defense not verified+implemented"}
+    from core.sisai_fingerprint import defense_fingerprint
+    fp = defense_fingerprint(defense)
+    entry = {"entry_id": defense.get("defense_id") or f"DEF-{fp[:8]}", "kind": "defense",
+             "title": defense.get("title", ""), "fingerprint": fp,
+             "implementations": defense.get("implementations", [])}
+    ledger = read_json(ledger_path) or empty_ledger()
+    reindex_ledger(ledger)
+    if is_consumed({"title": entry["title"], "fingerprint": fp}, ledger)["consumed"]:
+        return {"status": "already_recorded", "defense_id": entry["entry_id"]}
+    append_entry(ledger, entry, now=now)
+    atomic_write_json(ledger_path, ledger)
+    corpus_entry = defense_to_corpus_entry(defense)
+    corpus = read_json(corpus_path) or []
+    if not any(c.get("defense_id") == corpus_entry["defense_id"] for c in corpus):
+        corpus.append(corpus_entry)
+        atomic_write_json(corpus_path, corpus)
+    return {"status": "closed", "defense_id": entry["entry_id"], "corpus_entry": corpus_entry}
+
+
+def _print(r: dict) -> None:
+    print("=== SISAI turn ===")
+    c = r["channels"]
+    print(f"  channels: {c['active']} active | kinds={c['kinds']} | missing={c['missing_kinds']}")
+    t = r["threats"]
+    cov = r["coverage"]
+    print(f"  threats: {t['total']} total, {t['untriaged']} undefended | "
+          f"coverage repair_required={cov['repair_required']} "
+          f"(dominance={cov['category_dominance']}, categories={cov['distinct_categories']})")
+    if r["top_threat"]:
+        tt = r["top_threat"]
+        print(f"  top threat (triage): {tt['threat_id']} \"{tt['title']}\" "
+              f"[{tt['category']}] cvss={tt['cvss']} score={tt['score']}")
+    if r["defense_plan"]:
+        p = r["defense_plan"]
+        print(f"  defense plan: {p['action']} ({p['why']})")
+    a = r["next_action"]
+    print(f"  NEXT ACTION: {a['action']}  ({a['why']})")
+
+
+def _opt(argv, name, default=None):
+    for i, a in enumerate(argv):
+        if a == name and i + 1 < len(argv):
+            return argv[i + 1]
+    return default
+
+
+def _now(argv):
+    n = _opt(argv, "--now")
+    if n:
+        return n
+    import datetime
+    return datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+
+
+USAGE = ("usage:\n"
+         "  python sisai.py status [--root R] [--now YYYY-MM-DD] [--json]\n"
+         "  python sisai.py plan [--now YYYY-MM-DD]\n"
+         "  python sisai.py discover-channel --channel <ch.json> --registry <reg.json> [--now ...]\n"
+         "  python sisai.py record-defense --defense <def.json> --ledger <l.json> --corpus <c.json> [--now ...]\n")
+
+
+def _main(argv) -> int:
+    cmd = argv[1] if len(argv) > 1 else "status"
+
+    if cmd in ("status", "plan"):
+        r = build_report(_opt(argv, "--root"), now=_now(argv))
+        if cmd == "plan":
+            print(json.dumps(r.get("defense_plan"), ensure_ascii=False, indent=2))
+        elif "--json" in argv:
+            print(json.dumps(r, ensure_ascii=False, indent=2))
+        else:
+            _print(r)
+        return 0
+
+    if cmd == "discover-channel":
+        chf, reg = _opt(argv, "--channel"), _opt(argv, "--registry")
+        if not (chf and reg):
+            sys.stderr.write(USAGE)
+            return 2
+        registry = read_json(reg) or {"channels": [], "by_fingerprint": {}}
+        with open(chf, encoding="utf-8") as f:
+            res = register_channel(registry, json.load(f), now=_now(argv))
+        atomic_write_json(reg, registry)
+        print(json.dumps(res, ensure_ascii=False, indent=2))
+        return 0
+
+    if cmd == "record-defense":
+        df, led, cor = _opt(argv, "--defense"), _opt(argv, "--ledger"), _opt(argv, "--corpus")
+        if not (df and led and cor):
+            sys.stderr.write(USAGE)
+            return 2
+        with open(df, encoding="utf-8") as f:
+            res = record_defense(json.load(f), led, cor, now=_now(argv))
+        print(json.dumps(res, ensure_ascii=False, indent=2))
+        return 0 if res["status"] in ("closed", "already_recorded") else 1
+
+    sys.stderr.write(USAGE)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(_main(sys.argv))

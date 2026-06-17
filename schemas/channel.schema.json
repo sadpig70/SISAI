@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SISAI information channel (self-expanding source)",
+  "type": "object",
+  "required": ["id", "kind", "url"],
+  "properties": {
+    "id": {"type": "string"},
+    "kind": {"type": "string", "enum": ["cve", "advisory", "news", "paper", "oss", "exploit_db", "vendor_intel", "standard"]},
+    "url": {"type": "string"},
+    "discovered_from": {"type": ["string", "null"]},
+    "orthogonality": {"type": "number", "minimum": 0, "maximum": 1},
+    "status": {"type": "string", "enum": ["active", "stale"]},
+    "fingerprint": {"type": "string"},
+    "registered_at": {"type": "string"}
+  }
+}

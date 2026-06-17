@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SISAI defense (external-adopted or self-designed control)",
+  "type": "object",
+  "required": ["defense_id", "title", "kind"],
+  "properties": {
+    "defense_id": {"type": "string"},
+    "title": {"type": "string"},
+    "kind": {"type": "string", "enum": ["external", "designed"]},
+    "controls": {"type": "array", "items": {"type": "string"}},
+    "covers_threat": {"type": ["string", "null"]},
+    "covers_category": {"type": ["string", "null"]},
+    "covers_techniques": {"type": "array", "items": {"type": "string"}},
+    "origin": {"type": ["string", "null"]},
+    "source_channels": {"type": "array", "items": {"type": "string"}},
+    "verification": {
+      "type": "object",
+      "properties": {
+        "method": {"type": "string"},
+        "passed": {"type": "boolean"}
+      }
+    },
+    "implementations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule_id": {"type": "string"},
+          "artifact_path": {"type": "string"}
+        }
+      }
+    },
+    "fingerprint": {"type": "string"}
+  }
+}

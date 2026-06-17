@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+
+# Runtime artifacts (the driver/loop generate these at the SISAI root at run time).
+# Durable seeds live under seed/ and are used as fallback when .sisai/ is absent.
+.sisai/
+
+# Scratch workspace (analysis, reports)
+_workspace/

@@ -1,0 +1,8 @@
+[
+  {"id": "CH-owasp-llm", "kind": "standard", "url": "https://owasp.org/www-project-top-10-for-large-language-model-applications/", "discovered_from": "seed", "orthogonality": 0.9},
+  {"id": "CH-nvd-cve", "kind": "cve", "url": "https://nvd.nist.gov/vuln/full-listing", "discovered_from": "seed", "orthogonality": 0.8},
+  {"id": "CH-nist-ai-rmf", "kind": "standard", "url": "https://www.nist.gov/itl/ai-risk-management-framework", "discovered_from": "seed", "orthogonality": 0.7},
+  {"id": "CH-google-gtig", "kind": "vendor_intel", "url": "https://cloud.google.com/blog/topics/threat-intelligence", "discovered_from": "seed", "orthogonality": 0.85},
+  {"id": "CH-arxiv-sec", "kind": "paper", "url": "https://arxiv.org/list/cs.CR/recent", "discovered_from": "seed", "orthogonality": 0.9},
+  {"id": "CH-github-advisory", "kind": "advisory", "url": "https://github.com/advisories", "discovered_from": "seed", "orthogonality": 0.75}
+]

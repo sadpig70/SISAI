@@ -1,0 +1,24 @@
+{
+  "corpus_version": "0.1",
+  "source": "_workspace/AI를 악용한 해킹 방법,사례,해결방안 요약.md (해결방안 6축)",
+  "defenses": [
+    {"title": "Secret-leak & external-LLM upload control", "kind": "external", "origin": "ai-abuse-summary",
+     "controls": ["dlp-proxy", "secret-scanning-push-protection", "private-coding-assistant"],
+     "covers_category": "data-poisoning", "covers_techniques": ["trigger-sample"]},
+    {"title": "AI agent least privilege (zero trust)", "kind": "external", "origin": "ai-abuse-summary",
+     "controls": ["jit-credentials", "tool-skill-allowlist", "behavior-monitoring"],
+     "covers_category": "agent-skill-abuse", "covers_techniques": ["malicious-skill", "indirect-injection-rce"]},
+    {"title": "Supply-chain & runtime defense", "kind": "external", "origin": "ai-abuse-summary",
+     "controls": ["aibom-sbom", "sandbox-microvm", "patch-prioritization"],
+     "covers_category": "supply-chain", "covers_techniques": ["pypi-poisoning", "lora-adapter-poisoning"]},
+    {"title": "Crypto agility & PQC adoption", "kind": "external", "origin": "ai-abuse-summary",
+     "controls": ["hybrid-pqc", "crypto-inventory", "confidential-computing-tee"],
+     "covers_category": "side-channel", "covers_techniques": ["power-analysis", "timing-packet-analysis"]},
+    {"title": "Adversarial testing & governance", "kind": "external", "origin": "ai-abuse-summary",
+     "controls": ["ai-red-team", "nist-ai-rmf-mapping", "incident-playbook"],
+     "covers_category": "llm-prompt-injection", "covers_techniques": ["indirect-injection"]},
+    {"title": "Security culture & workforce", "kind": "external", "origin": "ai-abuse-summary",
+     "controls": ["gamified-training", "shadow-ai-elimination"],
+     "covers_category": "social-engineering", "covers_techniques": ["voice-phishing"]}
+  ]
+}

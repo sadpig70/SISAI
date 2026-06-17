@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SISAI threat (attack method / case)",
+  "type": "object",
+  "required": ["threat_id", "title", "category"],
+  "properties": {
+    "threat_id": {"type": "string"},
+    "title": {"type": "string"},
+    "category": {"type": "string"},
+    "techniques": {"type": "array", "items": {"type": "string"}},
+    "cve": {"type": ["string", "null"]},
+    "cvss": {"type": ["number", "null"], "minimum": 0, "maximum": 10},
+    "recency": {"type": ["string", "null"]},
+    "source_channels": {"type": "array", "items": {"type": "string"}},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "fingerprint": {"type": "string"}
+  }
+}
