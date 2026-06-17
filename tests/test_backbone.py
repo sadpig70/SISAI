@@ -79,6 +79,19 @@ class TestSchema(unittest.TestCase):
         self.assertTrue(validate_against_schema({}, s))
         self.assertTrue(validate_against_schema({"k": "z"}, s))
 
+    def test_threat_schema_accepts_provenance(self):
+        sp = schema_path(".", "threat")
+        import json as _json
+        with open(sp, encoding="utf-8") as f:
+            self.assertTrue(schema_features(_json.load(f))["in_subset"])  # provenance keeps subset
+        t = {"threat_id": "T", "title": "t", "category": "c",
+             "recency": "2026-03-02",
+             "provenance": {"source_url": "https://nvd.nist.gov/vuln/detail/CVE-2026-31854",
+                            "authority": "NVD", "verified": True, "verified_on": "2026-06-17"}}
+        self.assertEqual(validate_against_schema(t, sp), [])
+        bad = dict(t, provenance=dict(t["provenance"], verified_on="June 2026"))
+        self.assertTrue(validate_against_schema(bad, sp))  # bad date rejected
+
     def test_walker_pattern(self):
         s = {"type": "object", "properties":
              {"recency": {"type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}(-[0-9]{2})?$"}}}
