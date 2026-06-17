@@ -18,13 +18,17 @@
 | 방어 조달 전략 | `python sisai.py plan --now <date>` | ADOPT_EXTERNAL / DESIGN_DEFENSE |
 | 채널 발굴·기록 | `python sisai.py discover-channel --channel ch.json --registry .sisai/channels.json` | dedup 등록 |
 | 고리 닫기 | `python sisai.py record-defense --defense def.json --ledger .sisai/ledger.json --corpus .sisai/corpus.json` | ledger+코퍼스 환류 |
+| 위협 적재 | `python sisai.py ingest-threats --threats new.json --ledger .sisai/ledger.json` | schema 검증·dedup 후 `.sisai/threats.json` (RUN_THREAT_INTEL 출력) |
 
 ## 2. 검증·테스트
 
 ```bash
-python core/sisai_validate.py .                 # 구조 + 계약 스키마 + seed
-python -m unittest discover -s tests -q          # 결정론 테스트
-python -m compileall core engines sisai.py       # stdlib 컴파일
+python core/sisai_validate.py .                      # 구조 + 계약 스키마 + seed
+python core/sisai_validate.py . --integrity --live   # 스킬 해시 무결성 + .sisai 런타임 상태
+python core/sisai_validate.py . --write-integrity    # 스킬 변경 후 무결성 매니페스트 재생성
+python defenses/verify_all.py                         # 10개 방어 suite 일괄 (per-suite + overall)
+python -m unittest discover -s tests -q              # 결정론 테스트
+python -m compileall core engines sisai.py defenses   # stdlib 컴파일
 ```
 
 ## 3. 자율 실행 (문서만 읽고 한 턴)

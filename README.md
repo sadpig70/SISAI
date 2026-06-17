@@ -57,10 +57,18 @@ python sisai.py discover-channel --channel ch.json --registry .sisai/channels.js
 # ★ 고리 닫기: 검증된 방어를 ledger에 기록 + 코퍼스 환류(염기쌍). idempotent.
 python sisai.py record-defense --defense def.json --ledger .sisai/ledger.json --corpus .sisai/corpus.json
 
-# 구조·계약 검증 / 테스트
-python core/sisai_validate.py .
+# RUN_THREAT_INTEL: 스캔한 새 위협 적재 (schema 검증 · dedup · data-only). idempotent.
+python sisai.py ingest-threats --threats new_threats.json --ledger .sisai/ledger.json
+
+# 구조·계약 검증 / 방어층 일괄 검증 / 테스트
+python core/sisai_validate.py .                       # 구조 + seed 계약
+python core/sisai_validate.py . --integrity --live    # 스킬 무결성 + .sisai 런타임 상태
+python defenses/verify_all.py                         # 10개 방어 suite 일괄 (recall/precision 요약)
 python -m unittest discover -s tests -q
 ```
+
+> **현황**: DefenseSweep 완료 — 시드 위협 10종 전부 방어(ledger 환류), 채널 9종(누락 kinds 없음).
+> 다음 단계는 `RUN_THREAT_INTEL`(새 위협 수집 → `ingest-threats`로 적재).
 
 ## 구조
 

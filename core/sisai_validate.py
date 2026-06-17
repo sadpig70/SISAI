@@ -10,6 +10,7 @@ CLI:
     python core/sisai_validate.py <root>
 """
 
+import hashlib
 import json
 import os
 import sys
@@ -96,6 +97,113 @@ def validate_seeds(root: str) -> list:
     return problems
 
 
+SKILL_MANIFEST = os.path.join("skills", "INTEGRITY.json")
+
+
+def _skill_files(root: str) -> list:
+    """All vendored skill files (sorted rel paths), excluding caches + the manifest."""
+    base = os.path.join(root, "skills")
+    out = []
+    for dirpath, dirs, files in os.walk(base):
+        dirs[:] = [d for d in dirs if d != "__pycache__"]
+        for f in files:
+            if f.endswith(".pyc") or f == "INTEGRITY.json":
+                continue
+            full = os.path.join(dirpath, f)
+            rel = os.path.relpath(full, base).replace("\\", "/")
+            out.append((rel, full))
+    return sorted(out)
+
+
+def compute_skill_manifest(root: str) -> dict:
+    """sha256 of every vendored skill file — tamper-evidence for pg/pgf/pgxf.
+
+    Line endings are normalized to LF before hashing so the manifest is stable across
+    git autocrlf checkouts (an EOL flip is not tampering; a content change is).
+    """
+    man = {}
+    for rel, full in _skill_files(root):
+        with open(full, "rb") as fh:
+            data = fh.read().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        man[rel] = hashlib.sha256(data).hexdigest()
+    return man
+
+
+def write_skill_manifest(root: str) -> tuple:
+    """(Re)generate skills/INTEGRITY.json from current skill files. Git is the trust anchor."""
+    man = compute_skill_manifest(root)
+    path = os.path.join(root, SKILL_MANIFEST)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump({"algo": "sha256", "files": man}, f, ensure_ascii=False,
+                  indent=1, sort_keys=True)
+    os.replace(tmp, path)
+    return path, len(man)
+
+
+def validate_integrity(root: str) -> list:
+    """Compare current skill files against the recorded manifest (tamper detection)."""
+    path = os.path.join(root, SKILL_MANIFEST)
+    if not os.path.exists(path):
+        return [f"skill integrity: {SKILL_MANIFEST} missing (run --write-integrity)"]
+    recorded = json.load(open(path, encoding="utf-8")).get("files", {})
+    current = compute_skill_manifest(root)
+    problems = []
+    for rel, h in recorded.items():
+        if rel not in current:
+            problems.append(f"skill integrity: missing file skills/{rel}")
+        elif current[rel] != h:
+            problems.append(f"skill integrity: changed file skills/{rel}")
+    for rel in current:
+        if rel not in recorded:
+            problems.append(f"skill integrity: untracked new file skills/{rel}")
+    return problems
+
+
+def _read_json(path):
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def validate_live(root: str) -> list:
+    """Validate runtime .sisai/ state (channels/ledger/corpus) — schema + semantic invariants.
+
+    No-op (returns []) when .sisai/ is absent; the driver falls back to seed then.
+    """
+    problems = []
+    sd = os.path.join(root, ".sisai")
+    if not os.path.isdir(sd):
+        return problems
+    # channels registry: each channel item must satisfy channel.schema
+    reg = _read_json(os.path.join(sd, "channels.json"))
+    if isinstance(reg, dict):
+        for i, ch in enumerate(reg.get("channels", [])):
+            problems += [f"live channel[{i}]: {p}"
+                         for p in validate_against_schema(ch, schema_path(root, "channel"))]
+    # ledger: schema + every defense entry carries implementations (real assets only)
+    led = _read_json(os.path.join(sd, "ledger.json"))
+    if led is not None:
+        problems += [f"live ledger: {p}"
+                     for p in validate_against_schema(led, schema_path(root, "ledger"))]
+        ledger_defense_ids = set()
+        for e in led.get("entries", []):
+            if e.get("kind") == "defense":
+                ledger_defense_ids.add(e.get("entry_id"))
+                if not e.get("implementations"):
+                    problems.append(f"live ledger: defense {e.get('entry_id')} has no implementations")
+        # corpus: each entry verified-only + must trace back to a recorded ledger defense
+        cor = _read_json(os.path.join(sd, "corpus.json"))
+        if isinstance(cor, list):
+            for i, c in enumerate(cor):
+                if not c.get("defense_id") or not c.get("title"):
+                    problems.append(f"live corpus[{i}]: missing defense_id/title")
+                elif c.get("defense_id") not in ledger_defense_ids:
+                    problems.append(f"live corpus[{i}]: {c.get('defense_id')} not in ledger")
+    return problems
+
+
 def validate_project(root: str) -> list:
     problems = []
     problems += validate_layout(root)
@@ -113,11 +221,25 @@ def validate_project(root: str) -> list:
 
 
 def _main(argv) -> int:
-    root = argv[1] if len(argv) > 1 else "."
+    args = argv[1:]
+    flags = [a for a in args if a.startswith("--")]
+    positional = [a for a in args if not a.startswith("--")]
+    root = positional[0] if positional else "."
+    if "--write-integrity" in flags:
+        path, n = write_skill_manifest(root)
+        print(f"wrote {os.path.relpath(path, root)} ({n} skill files hashed)")
+        return 0
     print(f"=== SISAI validation (root: {os.path.abspath(root)}) ===")
     print(f"  - vendored skills: {', '.join(EXPECTED_SKILLS)}")
     print(f"  - schemas: {', '.join(SCHEMA_NAMES)}")
+    extra = [f for f in ("--integrity", "--live") if f in flags]
+    if extra:
+        print(f"  - extra checks: {', '.join(extra)}")
     problems = validate_project(root)
+    if "--integrity" in flags:
+        problems += validate_integrity(root)
+    if "--live" in flags:
+        problems += validate_live(root)
     if problems:
         print("\nFAIL — problems:")
         for p in problems:

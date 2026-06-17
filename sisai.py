@@ -27,11 +27,11 @@ sys.path.insert(0, ROOT)
 
 from core.sisai_io import atomic_write_json, read_json                  # noqa: E402
 from core.sisai_ledger import (                                          # noqa: E402
-    empty_ledger, is_consumed, append_entry, reindex_ledger,
+    empty_ledger, is_consumed, append_entry, reindex_ledger, normalize_name,
 )
 from core.sisai_channels import (                                        # noqa: E402
     register_channel, active_channels, kind_coverage, should_discover_channels,
-    missing_kinds,
+    missing_kinds, next_channels_to_scan,
 )
 from core.sisai_triage import rank_threats, top_threat, measure_coverage  # noqa: E402
 from core.sisai_provenance import defense_to_corpus_entry, is_verified   # noqa: E402
@@ -83,7 +83,8 @@ def build_report(root=None, now="1970-01-01") -> dict:
     plan = plan_defense(top, corpus, ledger) if top else None
     return {
         "channels": {"active": len(active_channels(registry)),
-                     "kinds": kind_coverage(registry), "missing_kinds": missing_kinds(registry)},
+                     "kinds": kind_coverage(registry), "missing_kinds": missing_kinds(registry),
+                     "next_to_scan": [c.get("id") for c in next_channels_to_scan(registry)]},
         "threats": {"total": len(threats), "untriaged": len(untriaged)},
         "coverage": coverage,
         "top_threat": ({"threat_id": top["threat_id"], "title": top["title"],
@@ -154,6 +155,61 @@ def record_defense(defense: dict, ledger_path: str, corpus_path: str, now: str,
             "threat_marked": threat_marked, "corpus_entry": corpus_entry}
 
 
+def _threats_as_list(loaded):
+    """Normalize a loaded threats artifact (seed dict or runtime list) to a list."""
+    if isinstance(loaded, dict):
+        return loaded.get("threats", [])
+    if isinstance(loaded, list):
+        return loaded
+    return []
+
+
+def ingest_threats(raw_threats: list, threats_path: str, ledger_path: str, now: str,
+                   seed_threats=None) -> dict:
+    """Actuator: ingest freshly-scanned threats into runtime state (the RUN_THREAT_INTEL
+    output path). Collected text is DATA only — never control flow.
+
+    Steps (deterministic): schema-validate each candidate, assign stable id+fingerprint,
+    drop candidates already defended (ledger) or already present (runtime), then atomic
+    merge into `threats_path`. `now` injected. Idempotent: re-ingesting the same batch
+    accepts nothing.
+    """
+    from core.sisai_schema import validate_against_schema, schema_path
+    existing = _threats_as_list(read_json(threats_path))
+    if not existing and seed_threats is not None:
+        existing = _threats_as_list(seed_threats)
+    existing = threats_seed_to_list(existing)
+    ledger = read_json(ledger_path) or empty_ledger()
+    reindex_ledger(ledger)
+    normalized = threats_seed_to_list(raw_threats or [])
+    seen_fp = {t.get("fingerprint") for t in existing}
+    # Title dedup too: fingerprint can shift when a defaulted field (e.g. category)
+    # is absent in the raw input but present once stored, so title keeps re-ingest idempotent.
+    seen_titles = {normalize_name(t.get("title", "")) for t in existing}
+    accepted, skipped = [], []
+    sp = schema_path(ROOT, "threat")
+    for t in normalized:
+        problems = validate_against_schema(t, sp)
+        if problems:
+            skipped.append({"threat_id": t.get("threat_id"), "why": "schema_invalid",
+                            "detail": problems[:3]})
+        elif is_consumed({"title": t["title"], "fingerprint": t["fingerprint"]}, ledger)["consumed"]:
+            skipped.append({"threat_id": t["threat_id"], "why": "already_defended"})
+        elif t["fingerprint"] in seen_fp or normalize_name(t["title"]) in seen_titles:
+            skipped.append({"threat_id": t["threat_id"], "why": "duplicate_runtime_threat"})
+        else:
+            accepted.append(t)
+            seen_fp.add(t["fingerprint"])
+            seen_titles.add(normalize_name(t["title"]))
+    merged = existing + accepted
+    if accepted:
+        atomic_write_json(threats_path, merged)
+    return {"status": "ingested" if accepted else "noop",
+            "accepted": [t["threat_id"] for t in accepted],
+            "skipped": skipped,
+            "total_threats": len(merged)}
+
+
 def _print(r: dict) -> None:
     print("=== SISAI turn ===")
     c = r["channels"]
@@ -193,7 +249,8 @@ USAGE = ("usage:\n"
          "  python sisai.py status [--root R] [--now YYYY-MM-DD] [--json]\n"
          "  python sisai.py plan [--now YYYY-MM-DD]\n"
          "  python sisai.py discover-channel --channel <ch.json> --registry <reg.json> [--now ...]\n"
-         "  python sisai.py record-defense --defense <def.json> --ledger <l.json> --corpus <c.json> [--now ...]\n")
+         "  python sisai.py record-defense --defense <def.json> --ledger <l.json> --corpus <c.json> [--now ...]\n"
+         "  python sisai.py ingest-threats --threats <new.json> --ledger <l.json> [--out .sisai/threats.json] [--now ...]\n")
 
 
 def _main(argv) -> int:
@@ -202,7 +259,11 @@ def _main(argv) -> int:
     if cmd in ("status", "plan"):
         r = build_report(_opt(argv, "--root"), now=_now(argv))
         if cmd == "plan":
-            print(json.dumps(r.get("defense_plan"), ensure_ascii=False, indent=2))
+            plan = r.get("defense_plan")
+            if plan is None:
+                plan = {"action": "NO_PENDING_THREAT",
+                        "why": f"all known threats defended; next_action={r['next_action']['action']}"}
+            print(json.dumps(plan, ensure_ascii=False, indent=2))
         elif "--json" in argv:
             print(json.dumps(r, ensure_ascii=False, indent=2))
         else:
@@ -232,6 +293,21 @@ def _main(argv) -> int:
             res = record_defense(json.load(f), led, cor, now=_now(argv), threats=threats)
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return 0 if res["status"] in ("closed", "already_recorded") else 1
+
+    if cmd == "ingest-threats":
+        tf, led = _opt(argv, "--threats"), _opt(argv, "--ledger")
+        if not (tf and led):
+            sys.stderr.write(USAGE)
+            return 2
+        root = _opt(argv, "--root") or ROOT
+        out = _opt(argv, "--out") or os.path.join(root, ".sisai", "threats.json")
+        with open(tf, encoding="utf-8") as f:
+            raw = json.load(f)
+        raw_list = _threats_as_list(raw)
+        seed = read_json(os.path.join(SEED, "threats.json"))
+        res = ingest_threats(raw_list, out, led, now=_now(argv), seed_threats=seed)
+        print(json.dumps(res, ensure_ascii=False, indent=2))
+        return 0 if res["status"] in ("ingested", "noop") else 1
 
     sys.stderr.write(USAGE)
     return 2

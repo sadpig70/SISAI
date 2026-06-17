@@ -132,6 +132,45 @@ class TestDriver(unittest.TestCase):
             self.assertEqual(r["status"], "closed")
             self.assertIsNone(r["threat_marked"])
 
+    def test_ingest_threats_accept_dedup_defended_invalid(self):
+        from core.sisai_ledger import empty_ledger, append_entry
+        from core.sisai_fingerprint import threat_fingerprint
+        from core.sisai_io import atomic_write_json
+        with tempfile.TemporaryDirectory() as d:
+            tp = os.path.join(d, "threats.json")
+            lp = os.path.join(d, "ledger.json")
+            defended = {"title": "Old threat", "category": "c", "techniques": []}
+            led = empty_ledger()
+            append_entry(led, {"entry_id": "T1", "kind": "threat", "title": "Old threat",
+                               "fingerprint": threat_fingerprint(defended)}, now="n")
+            atomic_write_json(lp, led)
+            raw = [
+                {"title": "New threat", "category": "newcat", "techniques": ["x"]},
+                {"title": "Old threat", "category": "c", "techniques": []},   # already defended
+                {"category": "c2"},                                           # no title -> invalid
+            ]
+            r = sisai.ingest_threats(raw, tp, lp, now="2026-06-17")
+            self.assertEqual(r["status"], "ingested")
+            self.assertEqual(len(r["accepted"]), 1)
+            whys = {s["why"] for s in r["skipped"]}
+            self.assertIn("already_defended", whys)
+            self.assertIn("schema_invalid", whys)
+            # idempotent: re-ingest accepts nothing
+            r2 = sisai.ingest_threats(raw, tp, lp, now="2026-06-17")
+            self.assertEqual(r2["status"], "noop")
+            self.assertEqual(r2["accepted"], [])
+
+    def test_skill_integrity_in_sync(self):
+        # committed skills/INTEGRITY.json must match the vendored skill files (tamper guard)
+        from core.sisai_validate import validate_integrity, compute_skill_manifest
+        self.assertEqual(validate_integrity(ROOT), [])
+        self.assertEqual(compute_skill_manifest(ROOT), compute_skill_manifest(ROOT))
+
+    def test_validate_live_clean(self):
+        from core.sisai_validate import validate_live
+        # runtime .sisai/ (if present) must satisfy schema + invariants; [] when absent
+        self.assertEqual(validate_live(ROOT), [])
+
     def test_record_defense_rejects_unverified(self):
         with tempfile.TemporaryDirectory() as d:
             res = sisai.record_defense(

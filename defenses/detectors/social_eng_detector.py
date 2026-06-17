@@ -28,24 +28,32 @@ def load_rule(path: str = _DEFAULT_RULE) -> dict:
         rule = json.load(f)
     rule["_compiled"] = [(p["id"], p.get("severity", "medium"), re.compile(p["regex"]))
                          for p in rule.get("patterns", [])]
+    # Suppressors: benign-advisory contexts (e.g. fraud-awareness notices that quote a
+    # lure to warn against it). If one matches, the text is treated as benign even if a
+    # lure pattern fires — cuts false positives in this noisy domain. Narrow by design.
+    rule["_suppressors"] = [re.compile(s) for s in rule.get("suppressors", [])]
     return rule
 
 
 def scan(text: str, rule: dict) -> dict:
     """Return a verdict for one piece of ingested text (advisory data, not control)."""
+    blob = text or ""
+    suppressed = any(rx.search(blob) for rx in rule.get("_suppressors", []))
     matched = []
     top = None
     for pid, sev, rx in rule.get("_compiled", []):
-        if rx.search(text or ""):
+        if rx.search(blob):
             matched.append({"pattern_id": pid, "severity": sev})
             if top is None or _SEV_ORDER.get(sev, 0) > _SEV_ORDER.get(top, 0):
                 top = sev
+    is_mal = bool(matched) and not suppressed
     return {
         "rule_id": rule.get("rule_id", "SE-001"),
-        "malicious": bool(matched),
+        "malicious": is_mal,
         "matched": matched,
-        "severity": top,
-        "action": rule.get("action_on_match", []) if matched else [],
+        "suppressed": suppressed,
+        "severity": top if is_mal else None,
+        "action": rule.get("action_on_match", []) if is_mal else [],
     }
 
 

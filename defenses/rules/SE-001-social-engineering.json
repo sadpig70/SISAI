@@ -4,10 +4,17 @@
   "version": "1.0",
   "covers_threat": "THR-96d32f71",
   "covers_category": "social-engineering",
-  "covers_techniques": ["deepfake-bec", "voice-phishing"],
+  "covers_techniques": [
+    "deepfake-bec",
+    "voice-phishing"
+  ],
   "intent": "DETECT social-engineering pressure in INGESTED text (emails, call transcripts, chat messages) — executive-impersonation wire/credential requests, out-of-band channel switching, urgency+secrecy coercion, spoofed-identity markers, and gift-card/crypto payment lures. Output is a verdict (data) only; matched text is never elevated to an instruction. Reinforces the deterministic boundary in docs/SELF-DEFENSE.md.",
   "scope": "ingested_external_text",
-  "action_on_match": ["flag", "isolate", "require_human_review"],
+  "action_on_match": [
+    "flag",
+    "isolate",
+    "require_human_review"
+  ],
   "patterns": [
     {
       "id": "SE-001.exec-impersonation",
@@ -58,5 +65,11 @@
       "regex": "(?i)\\b(?:updated?|new|changed?|different)\\s+(?:bank(?:ing)?\\s+(?:details?|account|info(?:rmation)?)|account\\s+(?:number|details?)|routing\\s+(?:number|details?)|payment\\s+(?:details?|instructions?)|beneficiary)\\b"
     }
   ],
-  "verdict_rule": "malicious if any pattern matches; classification is advisory (data), routed to action_on_match. False-positive policy: normal business correspondence and third-person descriptions of fraud must NOT match (see verify suite)."
+  "verdict_rule": "malicious if any pattern matches; classification is advisory (data), routed to action_on_match. False-positive policy: normal business correspondence and third-person descriptions of fraud must NOT match (see verify suite).",
+  "suppressors": [
+    "(?i)\\b(?:will\\s+never\\s+ask|never\\s+ask\\s+you\\s+to|legitimate\\s+(?:vendors?|companies|banks?|staff|businesses)\\s+(?:will\\s+)?never)\\b",
+    "(?i)\\breport\\s+(?:such|these|this|any\\s+such)\\s+(?:request|requests|message|messages|email|emails|scam|scams)\\b",
+    "(?i)\\b(?:is\\s+a\\s+(?:common\\s+)?(?:scam|fraud|phishing)|beware\\s+of|do\\s+not\\s+fall\\s+for)\\b"
+  ],
+  "suppressor_intent": "benign fraud-awareness/advisory contexts that quote a lure to warn against it; suppress verdict to cut false positives"
 }
