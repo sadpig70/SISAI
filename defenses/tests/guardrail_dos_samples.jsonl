@@ -1,0 +1,18 @@
+{"id": "m01", "label": "malicious", "note": "reasoning budget hard cap exceeded", "text": "2026-06-17T09:12:04Z ERROR guardrail.eval reasoning token budget exceeded (hard-cap 4096); evaluation aborted for doc d-8821"}
+{"id": "m02", "label": "malicious", "note": "guardrail wall-clock timeout", "text": "WARN guardrail evaluation wall-clock budget exceeded: timed out after 5012ms, deadline exceeded, aborting"}
+{"id": "m03", "label": "malicious", "note": "reasoning loop detected", "text": "ALERT reasoning loop detected in guardrail evaluator; chain-of-thought failed to terminate after 41 cycles"}
+{"id": "m04", "label": "malicious", "note": "single-document saturation", "text": "guardrail.anomaly single document d-9931 saturated guardrail compute, monopolizing the evaluator queue for 8s"}
+{"id": "m05", "label": "malicious", "note": "guardrail amplification factor", "text": "metrics: guardrail compute amplification factor reached 312x for one crafted input vs baseline median"}
+{"id": "m06", "label": "malicious", "note": "per-tenant quota exhausted", "text": "ERROR per-tenant guardrail quota exhausted for tenant acme-7 (100% consumed in 12s); evaluations rejected"}
+{"id": "m07", "label": "malicious", "note": "circuit breaker tripped fail-open", "text": "2026-06-17T09:14:55Z CRIT guardrail circuit breaker tripped and failed open under load; alerting on-call"}
+{"id": "m08", "label": "malicious", "note": "reasoning length stddev anomaly", "text": "anomaly: guardrail reasoning length 6.4 stddev above baseline for doc d-1042 — quarantined for review"}
+{"id": "m09", "label": "malicious", "note": "beam-search mutation flood", "text": "IDS: beam-search adversarial mutations flooding guardrail endpoint to inflate per-eval reasoning cost"}
+{"id": "m10", "label": "malicious", "note": "mechanism-aware mutation storm", "text": "detected mechanism-aware perturbations storm crafted to exhaust the guardrail evaluator budget"}
+{"id": "m11", "label": "malicious", "note": "guardrail evaluation rate spike flood", "text": "guardrail evaluation rate flood: sustained 4200 rps surge against the guardrail gateway from one agent"}
+{"id": "b01", "label": "benign", "note": "normal guardrail pass log", "text": "2026-06-17T09:10:01Z INFO guardrail.eval doc d-7700 passed all policy checks in 240ms, 612 tokens"}
+{"id": "b02", "label": "benign", "note": "routine quota status under limit", "text": "INFO per-tenant guardrail quota for tenant acme-7: 38% of window consumed, well within budget"}
+{"id": "b03", "label": "benign", "note": "config description prose", "text": "The reasoning budget hard cap is configured to 4096 tokens per evaluation to bound guardrail latency."}
+{"id": "b04", "label": "benign", "note": "circuit breaker healthy/closed", "text": "INFO guardrail circuit breaker is closed and healthy; error rate 0.2%, no recovery action needed"}
+{"id": "b05", "label": "benign", "note": "general DoS definition prose", "text": "A denial-of-service attack aims to exhaust a system's resources so legitimate users cannot be served."}
+{"id": "b06", "label": "benign", "note": "baseline metrics normal length", "text": "metrics: guardrail reasoning length median 510 tokens, p99 1180 tokens, within 1 stddev of baseline"}
+{"id": "b07", "label": "benign", "note": "ordinary http rate log no guardrail", "text": "INFO api gateway request rate 120 rps, latency p95 80ms, all upstreams healthy"}

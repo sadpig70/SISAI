@@ -1,0 +1,125 @@
+{
+  "rule_id": "GD-001",
+  "title": "AI Agent Guardrail DoS Resilience Rule Set",
+  "version": "1.0",
+  "category": "ai-agent-dos",
+  "covers_threat": "THR-7eb25424",
+  "covers_category": "ai-agent-dos",
+  "covers_techniques": ["guardrail-dos", "reasoning-amplification", "quota-exhaustion"],
+  "intent": "DETECT indicators of an LLM-agent guardrail denial-of-service in INGESTED logs/text — reasoning-budget/timeout exceeded, reasoning-loop, single-document guardrail saturation/amplification, per-tenant quota exhaustion, circuit-breaker trips, anomalous reasoning length, and mechanism-aware mutation flooding. Output is a verdict (data) only; matched text is never executed/obeyed (data != instruction, docs/SELF-DEFENSE.md).",
+  "scope": "ingested_logs_and_text",
+  "action_on_match": ["flag", "isolate", "require_human_review"],
+  "patterns": [
+    {
+      "id": "GD-001.budget-exceeded",
+      "severity": "high",
+      "desc": "Guardrail reasoning budget / token / wall-clock limit exceeded or aborted (R1 cap tripped).",
+      "regex": "(?i)\\b(?:guardrail|reasoning|token|compute|wall[\\s-]?clock|eval(?:uation)?)\\b[^.\\n]{0,60}\\b(?:reasoning|token|compute|time(?:out)?|wall[\\s-]?clock|budget|deadline)\\b[^.\\n]{0,40}\\b(?:exceeded|exhausted|over\\s+limit|aborted|timed\\s+out|hard[\\s-]?cap\\s+(?:tripped|hit|reached))\\b"
+    },
+    {
+      "id": "GD-001.reasoning-loop",
+      "severity": "high",
+      "desc": "Guardrail evaluation stuck in a reasoning loop / non-terminating chain of thought.",
+      "regex": "(?i)\\b(?:reasoning|evaluation|inference|cot|chain[\\s-]?of[\\s-]?thought)\\s+loop\\s+(?:detected|suspected|aborted)\\b|\\bnon[\\s-]?terminating\\b[^.\\n]{0,30}\\bguardrail\\b|\\bguardrail\\b[^.\\n]{0,30}\\b(?:infinite|runaway|looping)\\s+(?:reasoning|evaluation)\\b"
+    },
+    {
+      "id": "GD-001.doc-amplification",
+      "severity": "critical",
+      "desc": "Single ingested document saturates / amplifies guardrail compute (one input consuming disproportionate reasoning).",
+      "regex": "(?i)\\b(?:single|one)\\s+(?:document|input|doc|payload|request)\\b[^.\\n]{0,50}\\bguardrail\\b[^.\\n]{0,40}\\b(?:saturat\\w*|amplif\\w*|consumed|monopoli\\w*|starv\\w*)\\b|\\bguardrail\\s+(?:compute\\s+)?amplification\\s+factor\\b"
+    },
+    {
+      "id": "GD-001.quota-exhaustion",
+      "severity": "high",
+      "desc": "Per-tenant / per-agent guardrail quota exhausted (R2 isolation budget drained).",
+      "regex": "(?i)\\b(?:per[\\s-]?(?:tenant|agent)|tenant|agent)\\b[^.\\n]{0,40}\\bguardrail\\b[^.\\n]{0,40}\\bquota\\b[^.\\n]{0,30}\\b(?:exhausted|drained|depleted|100%|fully\\s+consumed|exceeded)\\b|\\bquota\\s+exhaustion\\b[^.\\n]{0,30}\\b(?:guardrail|tenant|agent)\\b"
+    },
+    {
+      "id": "GD-001.circuit-breaker",
+      "severity": "high",
+      "desc": "Guardrail circuit breaker tripped / failed open under load (R3 availability event).",
+      "regex": "(?i)\\b(?:guardrail|guard[\\s-]?rail)\\b[^.\\n]{0,40}\\bcircuit\\s+breaker\\b[^.\\n]{0,30}\\b(?:tripped|opened|fail(?:ed|ing)?[\\s-]?open|engaged|activated)\\b|\\bcircuit\\s+breaker\\b[^.\\n]{0,30}\\b(?:tripped|fail(?:ed)?[\\s-]?open)\\b[^.\\n]{0,40}\\bguardrail\\b"
+    },
+    {
+      "id": "GD-001.length-anomaly",
+      "severity": "medium",
+      "desc": "Anomalous guardrail reasoning length flagged (>N stddev above baseline — R5 anomaly).",
+      "regex": "(?i)\\b(?:reasoning|evaluation|inference)\\s+length\\b[^.\\n]{0,40}\\b(?:\\d+(?:\\.\\d+)?\\s*(?:std(?:dev)?|σ|sigma|standard\\s+deviations?)\\s+(?:above|over)|anomal\\w*|outlier)\\b|\\b\\d+(?:\\.\\d+)?\\s*(?:std(?:dev)?|σ|sigma)\\b[^.\\n]{0,30}\\b(?:guardrail|reasoning)\\b"
+    },
+    {
+      "id": "GD-001.mutation-flood",
+      "severity": "critical",
+      "desc": "Beam-search / mechanism-aware mutation flooding crafted to inflate guardrail reasoning cost.",
+      "regex": "(?i)\\b(?:beam[\\s-]?search|mechanism[\\s-]?aware|adversarial)\\b[^.\\n]{0,40}\\b(?:mutation|perturbation|prompt)s?\\b[^.\\n]{0,40}\\b(?:flood\\w*|storm|barrage|inflat\\w*|amplif\\w*|exhaust\\w*)\\b|\\bguardrail\\b[^.\\n]{0,40}\\bmutation\\s+(?:flood|storm)\\b"
+    },
+    {
+      "id": "GD-001.rate-flood",
+      "severity": "high",
+      "desc": "High-volume request/evaluation flood targeting the guardrail gateway (sustained burst to drain capacity).",
+      "regex": "(?i)\\bguardrail\\b[^.\\n]{0,40}\\b(?:evaluation|request|invocation)\\s+(?:rate|flood|burst|storm)\\b[^.\\n]{0,40}\\b(?:spike|surge|\\d{3,}\\s*(?:/s|per\\s+second|rps)|sustained|exceed\\w*)\\b|\\b(?:flood|storm|surge)\\b[^.\\n]{0,30}\\bguardrail\\s+(?:gateway|endpoint|evaluations?)\\b"
+    }
+  ],
+  "rules": [
+    {
+      "id": "GD-001-R1",
+      "name": "reasoning_budget_hard_cap",
+      "type": "circuit_breaker",
+      "description": "Enforce absolute maximum token count and wall-clock time for any single guardrail LLM evaluation. If exceeded, abort the evaluation.",
+      "parameters": {
+        "max_tokens": 4096,
+        "max_time_ms": 5000,
+        "on_exceed": "abort_and_log"
+      },
+      "applies_to": "all_guardrail_evaluations"
+    },
+    {
+      "id": "GD-001-R2",
+      "name": "per_agent_cost_isolation",
+      "type": "resource_isolation",
+      "description": "Each agent/tenant gets an independent guardrail compute budget. No shared quota pool. Prevents noisy-neighbor starvation.",
+      "parameters": {
+        "quota_type": "per_agent",
+        "tokens_per_window": 100000,
+        "window_seconds": 60
+      },
+      "applies_to": "shared_guardrail_infrastructure"
+    },
+    {
+      "id": "GD-001-R3",
+      "name": "circuit_breaker_fail_open",
+      "type": "availability",
+      "description": "When guardrail is under DoS attack (quota exhausted, high error rate), fail open with alert. Do not block all agent operations.",
+      "parameters": {
+        "error_threshold_pct": 50,
+        "quota_exhaustion_threshold_pct": 90,
+        "on_trip": "fail_open_with_alert",
+        "recovery_interval_seconds": 30
+      },
+      "applies_to": "guardrail_gateway"
+    },
+    {
+      "id": "GD-001-R4",
+      "name": "guardrail_pattern_diversity",
+      "type": "redundancy",
+      "description": "Deploy at least 2 independent guardrail implementations (different models or rule-based + LLM hybrid). Rotate or ensemble. No single point of DoS failure.",
+      "parameters": {
+        "min_implementations": 2,
+        "strategies": ["model_rotation", "rule_llm_hybrid"],
+        "on_primary_fail": "fallback_to_secondary"
+      },
+      "applies_to": "guardrail_architecture"
+    },
+    {
+      "id": "GD-001-R5",
+      "name": "reasoning_loop_detection",
+      "type": "anomaly_detection",
+      "description": "Track per-document guardrail reasoning length distribution. Flag documents that trigger >3 stddev above mean reasoning length for quarantine review.",
+      "parameters": {
+        "baseline_window": 1000,
+        "anomaly_threshold_stddev": 3.0,
+        "on_detect": "quarantine_and_alert"
+      },
+      "applies_to": "guardrail_input_pipeline"
+    }
+  ]
+}

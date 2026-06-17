@@ -191,12 +191,17 @@ def validate_live(root: str) -> list:
     if led is not None:
         problems += [f"live ledger: {p}"
                      for p in validate_against_schema(led, schema_path(root, "ledger"))]
+        seen_ids = set()
         ledger_defense_ids = set()
         for e in led.get("entries", []):
+            eid = e.get("entry_id")
+            if eid in seen_ids:
+                problems.append(f"live ledger: duplicate entry_id {eid}")
+            seen_ids.add(eid)
             if e.get("kind") == "defense":
-                ledger_defense_ids.add(e.get("entry_id"))
+                ledger_defense_ids.add(eid)
                 if not e.get("implementations"):
-                    problems.append(f"live ledger: defense {e.get('entry_id')} has no implementations")
+                    problems.append(f"live ledger: defense {eid} has no implementations")
         # corpus: each entry verified-only + must trace back to a recorded ledger defense
         cor = _read_json(os.path.join(sd, "corpus.json"))
         if isinstance(cor, list):

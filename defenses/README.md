@@ -7,7 +7,7 @@ those records point to (`implementations[].artifact_path`).
 Defensive-only: detection rules, prevention policies, governance docs, verification
 harnesses. No working exploits, no offensive automation (AGENTS.md invariants).
 
-## Defense controls (10 — DefenseSweep complete)
+## Defense controls (11)
 
 Each control = `rules/<CODE>-001-*.json` + `detectors/<slug>_detector.py` (pure stdlib,
 verdict-only) + `tests/<slug>_samples.jsonl` + `verify_<code>_001.py` (gate: recall==1.0 &
@@ -25,6 +25,13 @@ precision>=0.85) + a governance/design doc. All 10 seed-threat categories are co
 | MA  | THR-b3d64864 | malware-automation | designed | `rules/MA-001-malware-automation.json` | 1.0 / 1.0 |
 | CA  | THR-ca2d7e92 | credential-attack | designed | `rules/CA-001-credential-attack.json` | 1.0 / 1.0 |
 | AE  | THR-e4d97fa0 | auto-exploitation | designed | `rules/AE-001-auto-exploitation.json` | 1.0 / 1.0 |
+| GD  | THR-7eb25424 | ai-agent-dos | designed | `rules/GD-001-guardrail-dos.json` | 1.0 / 1.0 |
+
+> **GD-001** also carries a `rules` policy array (runtime resilience: reasoning-budget cap,
+> per-tenant isolation, circuit-breaker, redundancy) alongside its detection `patterns`.
+> Runtime-ingested threats may have additional governance-only adopted controls recorded in
+> `.sisai/` (e.g. AI-IDE / AI-gateway / agent-shell CVE adaptations); those live with the
+> gitignored runtime ledger, not here.
 
 Governance/design docs: `incident-playbook-PI.md`, `nist-ai-rmf-mapping-PI.md`,
 `zero-trust-mapping-AS.md`, `aibom-mapping-SC.md`, `workforce-mapping-SE.md`,
