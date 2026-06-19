@@ -37,7 +37,9 @@ class TestSampleSuite(unittest.TestCase):
                  ".*(disable|turn off|bypass|verify_ssl\\s*=\\s*false|comment out)"}]}
         compiled, skipped = det.compile_rule(rule)
         self.assertEqual(skipped, 0)                    # the lookahead compiles fine in core (no false ReDoS refusal)
-        r = ver.verify_suite(self.samples, lambda t: det.scan(t, compiled))
+        # sample-suite.json is multi-category (B0-1); this config-tampering rule gates on its own subset
+        cfg = [s for s in self.samples if s.get("category") == "config-tampering"]
+        r = ver.verify_suite(cfg, lambda t: det.scan(t, compiled))
         self.assertEqual(r["gate"], "holdout")          # frozen holdout is sized -> gates on it
         self.assertTrue(r["passed"])                    # recall 1.0, precision >= 0.85 on the holdout
         self.assertEqual(r["holdout"]["precision"], 1.0)

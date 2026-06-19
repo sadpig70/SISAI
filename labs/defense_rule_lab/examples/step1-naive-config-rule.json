@@ -1,0 +1,9 @@
+{
+  "patterns": [
+    {
+      "id": "naive",
+      "desc": "STEP 1 (naive): flag the control-weakening verbs. Looks fine on the open tune split, but FAILS the holdout: it false-positives on the hard negatives ('Never disable TLS validation', 'Code signing cannot be turned off') AND misses 'verify_ssl=false'. No negation guard, incomplete coverage.",
+      "regex": "(?i)(disable|turn off|bypass|comment out)"
+    }
+  ]
+}
