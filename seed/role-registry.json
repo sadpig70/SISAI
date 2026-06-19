@@ -1,0 +1,12 @@
+{
+  "_note": "EXAMPLE/template role registry (v1.4 CrossModelRoles). Demonstrates the committed contract and disjointness rule; the model-ids are placeholders. Production role assignment is a separate, gated decision (independence protocol) and must satisfy roles_disjoint: author != holdout_curator != judge per binding pairs. cm_test is capability evidence only, never recorded into ledger/corpus.",
+  "entries": [
+    {
+      "suite": "EXAMPLE-config-tampering",
+      "category": "config-tampering",
+      "author_model": "example-author-model",
+      "holdout_curator_model": "grok-build",
+      "judge_model": "example-judge-model"
+    }
+  ]
+}

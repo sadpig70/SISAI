@@ -45,6 +45,29 @@ defensive-only                           → detection/prevention/reports only. 
 wall-clock                               → only at the sisai.py CLI edge (--now injection takes precedence)
 ```
 
+## 5b. Self-verification gates (SISAIImprove @v1.4)
+
+Four deterministic gates harden the loop; all are **opt-in + grandfather** (default off → the existing
+suites never regress), and all keep cognition in the meta-layer with `core/` only gating on attestations:
+
+- **ProvenanceGate** (`core/sisai_provenance`, wired in `ingest_threats` via `--quarantine`): page-claimed
+  provenance is stripped; trust is **host-derived** (`authority_from_url`, not AI-judged); unverified →
+  quarantine. Anti fail-open: collected text cannot self-assert verification.
+- **HeldoutBench** (`core/sisai_verify.verify_suite`): grades a detector on a **frozen holdout** split when
+  sized, else the legacy full-set gate stays authoritative. The adversarial split is train-only.
+- **AdversarialVerify** (`engines/adversarial`): bounded red/blue hardening loop; cognition is *injected*
+  so `engines/` stays pure; regressive hardens are rejected; `budget_exhausted` ⇒ not recorded (fail-closed).
+  The loop writes only `split in {tune,adversarial}` via `atomic_append_samples` — **holdout is structurally
+  unwritable** (independence is a mechanism, not a label).
+- **CritiqueGate** (`core/sisai_provenance.is_critiqued`, wired in `record_defense` via `--require-critique`):
+  a multi-lens critique must pass before the first record.
+- **CrossModelRoles** (`core/sisai_verify.roles_disjoint`): a committed role registry enforces the binding
+  pairs (Author != Holdout, Author != Judge) per suite — a label-based cross-model layer **on top of** the
+  structural holdout freeze. `engines/adversarial.route_author` routes the author per detector category.
+
+The `DeterminismGuard` test (`tests/test_determinism_boundary.py`) AST-scans `core/`+`engines/` to enforce
+the boundary (no clock/RNG/network/subprocess; no `AI_` symbols in `core/`).
+
 ## 6. Extension point — N strands
 
 The invariant is the backbone, not the number of strands. To add a new strand (e.g., ComplianceMap, RedTeamSim),

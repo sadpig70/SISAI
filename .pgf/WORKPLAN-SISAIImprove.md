@@ -56,6 +56,10 @@ ExecV14 // implement @v1.4 (in-progress)
   injected cognition so engines/ stays pure, no-regress harden, `budget_exhausted`=fail-closed);
   `engines/adversarial.route_author` (per-category, deterministic). +9 tests; **full suite 84 OK**;
   determinism guard green over `engines/adversarial.py`; `sisai_validate.py .` PASS.
-- **@v1.4 backbone implementation COMPLETE** across INC1–INC3. Optional finishing (INC4): ship an example
-  `role-registry` + a holdout-split sample suite as committed data, and a docs note. Adversarial cognition
+- **INC4 DONE** (this session): `seed/sample-suite.json` (sample.schema-valid; frozen-holdout sized so
+  `verify_suite` gates on the holdout — negation-aware rule passes, naive rule fails on hard negatives) +
+  `seed/role-registry.json` (role-registry.schema-valid EXAMPLE template; `roles_disjoint` passes;
+  production assignment stays gated) + `docs/ARCHITECTURE.md` §5b note. +5 tests; **full suite 89 OK**.
+- **@v1.4 backbone implementation COMPLETE** across INC1–INC4. Committed on `feat/sisaiimprove-v14`
+  (INC1-3 = 388decc; INC4 follow-up). NOT pushed (separate gated decision). Adversarial cognition
   (gen_variants/harden) is supplied by the meta-layer (skills) at runtime, by design.

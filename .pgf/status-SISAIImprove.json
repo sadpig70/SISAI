@@ -26,8 +26,12 @@
                     "engines/adversarial.adversarial_verify: bounded red/blue loop, cognition injected (engines/ stays pure), no-regress harden, budget_exhausted=fail-closed",
                     "engines/adversarial.route_author: deterministic per-category author routing (pairs with roles_disjoint)"],
       "note": "engines/ verified pure by DeterminismGuard; adversarial cognition (gen_variants/harden) injected by meta-layer at runtime"},
-    "completion": {"backbone_v1_4": "INC1-INC3 complete", "full_suite": "84 OK", "validate": "PASS",
-      "optional_INC4": "ship example role-registry + holdout-split sample suite as committed data + docs note"}
+    "INC4_SeedData": {"status": "done", "tests": "89 OK (+5 seed-data)", "validate": "PASS",
+      "delivered": ["seed/sample-suite.json (sample.schema-valid; holdout sized -> verify_suite gates on frozen holdout; negation-aware rule passes, naive rule fails on hard negatives)",
+                    "seed/role-registry.json (role-registry.schema-valid EXAMPLE template; roles_disjoint passes; production assignment remains gated)",
+                    "tests/test_v14_seed_data.py", "docs/ARCHITECTURE.md 5b self-verification gates note"]},
+    "completion": {"backbone_v1_4": "INC1-INC4 complete", "full_suite": "89 OK", "validate": "PASS",
+      "committed": "feat/sisaiimprove-v14 (INC1-3: 388decc; INC4 follow-up)", "pushed": false}
   },
   "round1": {"version": "1.0", "verdict": "REVISE", "tally": {"critical": 2, "high": 8, "medium": 7, "low": 3}},
   "round2": {
