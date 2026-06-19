@@ -106,5 +106,23 @@
   {"split": "holdout", "label": "benign", "text": "The article quotes the suspect who said he would harm them.", "category": "trust-safety"},
   {"split": "holdout", "label": "benign", "text": "Never encourage anyone to hurt themselves; offer support instead.", "category": "trust-safety"},
   {"split": "holdout", "label": "benign", "text": "Doxxing means publishing someone's private address without consent.", "category": "trust-safety"},
-  {"split": "holdout", "label": "benign", "text": "We removed the post that demeaned people for their religion.", "category": "trust-safety"}
+  {"split": "holdout", "label": "benign", "text": "We removed the post that demeaned people for their religion.", "category": "trust-safety"},
+
+  {"split": "tune", "label": "malicious", "text": "The patient was hospitalized after taking the drug.", "category": "pharmacovigilance"},
+  {"split": "tune", "label": "malicious", "text": "The patient died following the infusion.", "category": "pharmacovigilance"},
+  {"split": "tune", "label": "malicious", "text": "The reaction was life-threatening and required ICU care.", "category": "pharmacovigilance"},
+  {"split": "tune", "label": "benign", "text": "The patient reported a mild transient headache that resolved.", "category": "pharmacovigilance"},
+  {"split": "tune", "label": "benign", "text": "No adverse events were observed during the visit.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "malicious", "text": "The patient was hospitalized after the second dose.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "malicious", "text": "The reaction was life-threatening and needed emergency care.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "malicious", "text": "The patient died shortly after administration.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "malicious", "text": "The infant was born with a congenital anomaly after maternal exposure.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "malicious", "text": "The event caused permanent disability.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "malicious", "text": "An unexpected serious reaction occurred requiring intervention.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "malicious", "text": "The patient required prolonged hospitalization due to the reaction.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "benign", "text": "The patient reported a mild rash that resolved without treatment.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "benign", "text": "No adverse events were observed during the study.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "benign", "text": "The expected, non-serious side effect was documented per the label.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "benign", "text": "The patient was not hospitalized and recovered fully.", "category": "pharmacovigilance"},
+  {"split": "holdout", "label": "benign", "text": "Historical note: the medicine was approved after its trials.", "category": "pharmacovigilance"}
 ]
