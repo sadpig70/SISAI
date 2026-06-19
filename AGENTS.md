@@ -24,7 +24,7 @@ and **independent of HELIX and global settings**.
 - backbone (deterministic stdlib): `core/` (fingerprint·channels·ledger·triage·provenance·loop·io·schema·validate · v1.4: detect·verify)
 - adapters/engines: `engines/adapters.py` · `engines/adversarial.py` (v1.4 red/blue loop, injected cognition) · driver: `sisai.py` · contracts: `schemas/` (7) · seed: `seed/`
 - runtime artifacts: `.sisai/` (channels.json·ledger.json·corpus.json — gitignore). Falls back to `seed/` if absent.
-- docs: `docs/` (ARCHITECTURE·SELF-DEFENSE·INSTRUCTIONS-sisai-cycle·RUNBOOK), `README.md`.
+- docs: `docs/` (TECHNICAL-GUIDE [complete standalone reference]·ARCHITECTURE·SELF-DEFENSE·INSTRUCTIONS-sisai-cycle·RUNBOOK), `README.md`.
 
 # Your role — AI runtime = meta-layer
 - **The deterministic backbone (`core/`·`sisai.py`) handles control, recording, prioritization, and feedback.** On top of it you

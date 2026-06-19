@@ -101,6 +101,7 @@ SISAI/
 ```
 
 ## See more
+**Start here:** `docs/TECHNICAL-GUIDE.md` (complete standalone technical reference — understand & operate SISAI from one doc). ·
 `RUNBOOK.md` (all-feature invocation) · `docs/ARCHITECTURE.md` (3 strands ↔ implementation) ·
 `docs/SELF-DEFENSE.md` (SISAI self-defense) · `docs/INSTRUCTIONS-sisai-cycle.md` (one autonomous turn reading docs only).
 
