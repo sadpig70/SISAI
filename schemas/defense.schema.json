@@ -20,6 +20,24 @@
         "passed": {"type": "boolean"}
       }
     },
+    "critique": {
+      "type": "object",
+      "properties": {
+        "passed": {"type": "boolean"},
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "lens": {"type": "string", "enum": ["correctness", "evadability", "fp_risk", "scope"]},
+              "issue": {"type": "string"},
+              "evidence": {"type": "string"},
+              "fix": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
     "implementations": {
       "type": "array",
       "items": {

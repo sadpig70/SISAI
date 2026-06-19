@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SISAI labeled sample (detector tune/holdout/adversarial row)",
+  "type": "object",
+  "required": ["label", "text"],
+  "properties": {
+    "label": {"type": "string", "enum": ["malicious", "benign"]},
+    "text": {"type": "string"},
+    "split": {"type": "string", "enum": ["tune", "holdout", "adversarial"]},
+    "category": {"type": "string"}
+  }
+}

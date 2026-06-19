@@ -34,7 +34,10 @@ from core.sisai_channels import (                                        # noqa:
     missing_kinds, next_channels_to_scan,
 )
 from core.sisai_triage import rank_threats, top_threat, measure_coverage  # noqa: E402
-from core.sisai_provenance import defense_to_corpus_entry, is_verified   # noqa: E402
+from core.sisai_provenance import (                                      # noqa: E402
+    defense_to_corpus_entry, is_verified, is_critiqued,
+    is_provenance_verified, strip_incoming_provenance,
+)
 from core.sisai_loop import next_action, plan_defense                    # noqa: E402
 from engines.adapters import (                                           # noqa: E402
     channels_seed_to_registry, threats_seed_to_list, defenses_seed_to_corpus,
@@ -118,13 +121,18 @@ def _mark_threat_defended(ledger: dict, threat_id, threats, now: str):
 
 
 def record_defense(defense: dict, ledger_path: str, corpus_path: str, now: str,
-                   threats=None) -> dict:
+                   threats=None, require_critique: bool = False) -> dict:
     """Actuator: record a VERIFIED defense to the ledger + feed it back to the corpus.
 
     Idempotent — re-running on an already-recorded defense is a no-op. Only verified
     + implemented defenses are accepted (defensive discipline). `now` injected. When
     `threats` is supplied, the defense's `covers_threat` is also marked defended so the
     threat leaves the untriaged set and `next_action` advances to the next threat.
+
+    `require_critique` (P0-4, v1.4): when True, a multi-lens critique must have passed
+    before the FIRST record (grandfathers already-recorded defenses — re-record is a
+    no-op). Default False keeps legacy callers/seeds non-blocking (advisory-until-provisioned);
+    the CLI actuator turns it on so live closures are gated.
     """
     if not is_verified(defense):
         return {"status": "rejected", "why": "defense not verified+implemented"}
@@ -136,6 +144,8 @@ def record_defense(defense: dict, ledger_path: str, corpus_path: str, now: str,
     ledger = read_json(ledger_path) or empty_ledger()
     reindex_ledger(ledger)
     defense_already = is_consumed({"title": entry["title"], "fingerprint": fp}, ledger)["consumed"]
+    if require_critique and not defense_already and not is_critiqued(defense):
+        return {"status": "rejected", "why": "critique not passed (required on first record)"}
     if not defense_already:
         append_entry(ledger, entry, now=now)
     # Mark the covered threat defended even on re-run (self-heals ledgers written before
@@ -164,8 +174,27 @@ def _threats_as_list(loaded):
     return []
 
 
+def _quarantine_append(quarantine_path: str, rows: list, now: str) -> int:
+    """fp-dedup append of unverified threats to the quarantine store. Returns rows added.
+    Deterministic; the store is a flat list, each row = threat + {quarantine:{reason,at}}."""
+    store = read_json(quarantine_path) or []
+    seen = {r.get("fingerprint") for r in store}
+    added = 0
+    for t in rows:
+        if t.get("fingerprint") in seen:
+            continue                                   # transient retry de-dupes; no duplicate rejected rows
+        rec = dict(t)
+        rec["quarantine"] = {"reason": "unverified_provenance", "at": now}
+        store.append(rec)
+        seen.add(t.get("fingerprint"))
+        added += 1
+    if added:
+        atomic_write_json(quarantine_path, store)
+    return added
+
+
 def ingest_threats(raw_threats: list, threats_path: str, ledger_path: str, now: str,
-                   seed_threats=None) -> dict:
+                   seed_threats=None, quarantine_path: str = None, fetch_provenance=None) -> dict:
     """Actuator: ingest freshly-scanned threats into runtime state (the RUN_THREAT_INTEL
     output path). Collected text is DATA only — never control flow.
 
@@ -173,6 +202,13 @@ def ingest_threats(raw_threats: list, threats_path: str, ledger_path: str, now: 
     drop candidates already defended (ledger) or already present (runtime), then atomic
     merge into `threats_path`. `now` injected. Idempotent: re-ingesting the same batch
     accepts nothing.
+
+    ProvenanceGate (P0-3, v1.4) — opt-in via `quarantine_path`: when set, each candidate has
+    any source-supplied provenance STRIPPED first (anti fail-open: collected text can't self-claim),
+    then the isolated fetcher's ground-truth provenance from `fetch_provenance` (list aligned with
+    `raw_threats`) is overlaid, then the deterministic host-derived gate routes verified->threats,
+    unverified->quarantine. When `quarantine_path` is None, legacy behavior (no gate) — grandfathers
+    the seed/11 suites and existing callers.
     """
     from core.sisai_schema import validate_against_schema, schema_path
     existing = _threats_as_list(read_json(threats_path))
@@ -181,12 +217,21 @@ def ingest_threats(raw_threats: list, threats_path: str, ledger_path: str, now: 
     existing = threats_seed_to_list(existing)
     ledger = read_json(ledger_path) or empty_ledger()
     reindex_ledger(ledger)
-    normalized = threats_seed_to_list(raw_threats or [])
+    raw = list(raw_threats or [])
+    if quarantine_path is not None:                    # strip page-claimed prov, overlay fetcher ground-truth
+        processed = []
+        for i, rt in enumerate(raw):
+            t = strip_incoming_provenance(rt)
+            if fetch_provenance and i < len(fetch_provenance) and fetch_provenance[i]:
+                t["provenance"] = fetch_provenance[i]
+            processed.append(t)
+        raw = processed
+    normalized = threats_seed_to_list(raw)
     seen_fp = {t.get("fingerprint") for t in existing}
     # Title dedup too: fingerprint can shift when a defaulted field (e.g. category)
     # is absent in the raw input but present once stored, so title keeps re-ingest idempotent.
     seen_titles = {normalize_name(t.get("title", "")) for t in existing}
-    accepted, skipped = [], []
+    accepted, skipped, quarantined = [], [], []
     sp = schema_path(ROOT, "threat")
     for t in normalized:
         problems = validate_against_schema(t, sp)
@@ -197,6 +242,8 @@ def ingest_threats(raw_threats: list, threats_path: str, ledger_path: str, now: 
             skipped.append({"threat_id": t["threat_id"], "why": "already_defended"})
         elif t["fingerprint"] in seen_fp or normalize_name(t["title"]) in seen_titles:
             skipped.append({"threat_id": t["threat_id"], "why": "duplicate_runtime_threat"})
+        elif quarantine_path is not None and not is_provenance_verified(t):
+            quarantined.append(t)                       # accepted-shape but unverified -> quarantine, not threats
         else:
             accepted.append(t)
             seen_fp.add(t["fingerprint"])
@@ -204,9 +251,12 @@ def ingest_threats(raw_threats: list, threats_path: str, ledger_path: str, now: 
     merged = existing + accepted
     if accepted:
         atomic_write_json(threats_path, merged)
+    n_quar = _quarantine_append(quarantine_path, quarantined, now) if quarantine_path is not None else 0
     return {"status": "ingested" if accepted else "noop",
             "accepted": [t["threat_id"] for t in accepted],
             "skipped": skipped,
+            "quarantined": [t["threat_id"] for t in quarantined],
+            "quarantined_count": n_quar,
             "total_threats": len(merged)}
 
 
@@ -249,8 +299,9 @@ USAGE = ("usage:\n"
          "  python sisai.py status [--root R] [--now YYYY-MM-DD] [--json]\n"
          "  python sisai.py plan [--now YYYY-MM-DD]\n"
          "  python sisai.py discover-channel --channel <ch.json> --registry <reg.json> [--now ...]\n"
-         "  python sisai.py record-defense --defense <def.json> --ledger <l.json> --corpus <c.json> [--now ...]\n"
-         "  python sisai.py ingest-threats --threats <new.json> --ledger <l.json> [--out .sisai/threats.json] [--now ...]\n")
+         "  python sisai.py record-defense --defense <def.json> --ledger <l.json> --corpus <c.json> [--require-critique] [--now ...]\n"
+         "  python sisai.py ingest-threats --threats <new.json> --ledger <l.json> [--out .sisai/threats.json]"
+         " [--quarantine .sisai/quarantine.json [--fetch-provenance <prov.json>]] [--now ...]\n")
 
 
 def _main(argv) -> int:
@@ -290,7 +341,8 @@ def _main(argv) -> int:
         root = _opt(argv, "--root") or ROOT
         threats = threats_seed_to_list(_load(root, "threats.json", "threats.json"))
         with open(df, encoding="utf-8") as f:
-            res = record_defense(json.load(f), led, cor, now=_now(argv), threats=threats)
+            res = record_defense(json.load(f), led, cor, now=_now(argv), threats=threats,
+                                 require_critique="--require-critique" in argv)
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return 0 if res["status"] in ("closed", "already_recorded") else 1
 
@@ -305,7 +357,11 @@ def _main(argv) -> int:
             raw = json.load(f)
         raw_list = _threats_as_list(raw)
         seed = read_json(os.path.join(SEED, "threats.json"))
-        res = ingest_threats(raw_list, out, led, now=_now(argv), seed_threats=seed)
+        qpath = _opt(argv, "--quarantine")           # opt-in ProvenanceGate; absent -> legacy (no gate)
+        fp_file = _opt(argv, "--fetch-provenance")    # optional: fetcher ground-truth, aligned with --threats
+        fetch_prov = _threats_as_list(read_json(fp_file)) if fp_file else None
+        res = ingest_threats(raw_list, out, led, now=_now(argv), seed_threats=seed,
+                             quarantine_path=qpath, fetch_provenance=fetch_prov)
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return 0 if res["status"] in ("ingested", "noop") else 1
 

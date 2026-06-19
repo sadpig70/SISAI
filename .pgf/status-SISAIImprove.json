@@ -1,0 +1,69 @@
+{
+  "project": "SISAIImprove",
+  "design": ".pgf/DESIGN-SISAIImprove.md",
+  "review": ".pgf/REVIEW-SISAIImprove.md",
+  "phase": "implementing",
+  "workplan": ".pgf/WORKPLAN-SISAIImprove.md",
+  "design_version": "1.4",
+  "review_iterations": 3,
+  "implementation": {
+    "INC1_PureCore": {"status": "done", "tests": "67 OK (47 baseline + 17 v14-core + 3 determinism)", "validate": "PASS",
+      "delivered": ["schemas: threat.provenance(+source_sha256,authority enum), defense.critique, sample.schema, role-registry.schema (registered)",
+                    "core/sisai_provenance: host_from_url/authority_from_url/is_provenance_verified/strip_incoming_provenance/is_critiqued",
+                    "core/sisai_verify (NEW): MIN_HOLDOUT/metrics/verify_suite + index_role_registry/roles_disjoint",
+                    "core/sisai_detect (NEW): is_inert_indicator/compile_rule/scan/blue_run",
+                    "tests/test_determinism_boundary.py + tests/test_v14_core.py"],
+      "note": "pure primitives only; no live behavior changed; 11 suites untouched"},
+    "INC2_Wiring": {"status": "done", "tests": "75 OK (+8 wiring)", "validate": "PASS",
+      "delivered": ["ingest_threats(+quarantine_path,+fetch_provenance): strip page-claimed prov -> overlay fetcher ground-truth -> host-derived gate -> verified|quarantine; legacy when path absent",
+                    "record_defense(+require_critique): is_critiqued first-record-only gate, grandfather already-recorded, default off",
+                    "_quarantine_append: fp-dedup quarantine store",
+                    "sisai.py CLI flags: --quarantine, --fetch-provenance, --require-critique (opt-in)"],
+      "note": "gates default OFF -> 11 suites never regress; anti-fail-open verified (self-claimed provenance stripped)",
+      "deferred": "holdout-split seed rows -> when verify_suite is wired into a live suite flow"},
+    "INC3_Engines": {"status": "done", "tests": "84 OK (+9 engines)", "validate": "PASS",
+      "delivered": ["core/sisai_detect.atomic_append_samples: structural holdout freeze (loop writes tune|adversarial ONLY; holdout unwritable) + inert/split asserts",
+                    "engines/adversarial.adversarial_verify: bounded red/blue loop, cognition injected (engines/ stays pure), no-regress harden, budget_exhausted=fail-closed",
+                    "engines/adversarial.route_author: deterministic per-category author routing (pairs with roles_disjoint)"],
+      "note": "engines/ verified pure by DeterminismGuard; adversarial cognition (gen_variants/harden) injected by meta-layer at runtime"},
+    "completion": {"backbone_v1_4": "INC1-INC3 complete", "full_suite": "84 OK", "validate": "PASS",
+      "optional_INC4": "ship example role-registry + holdout-split sample suite as committed data + docs note"}
+  },
+  "round1": {"version": "1.0", "verdict": "REVISE", "tally": {"critical": 2, "high": 8, "medium": 7, "low": 3}},
+  "round2": {
+    "version": "1.1",
+    "perspectives": {"P5_feasibility": "CONCERN", "P7_risk": "CONCERN", "P8_architecture": "PASS"},
+    "verdict": "REVISE",
+    "tally": {"critical": 2, "high": 3, "medium": 3, "low": 5},
+    "gate": "Critical=0 AND High<=2 -> FAILED",
+    "key_blockers": ["R1 holdout author-independence unverifiable (1 runtime)", "R2 MIN_HOLDOUT blocks all 11 suites", "R4 inert-gate frames form not capability", "R5 authority AI-judged on attacker text"]
+  },
+  "resolution": "DESIGN revised to @v:1.2: frozen/read-only author-disjoint holdout (loop cannot write it); per-suite advisory gate (legacy until provisioned); host-derived authority; inert reframed as storage hygiene; module ownership + expanded determinism test. @v:1.3: cross-model role-disjointness (CrossModelRoles) added from cm_test capability evidence (operator-approved 2026-06-19) -> lifts the v1.2 single-runtime residual to a multi-runtime mechanism",
+  "status": "design-accepted",
+  "design_version_history": ["1.0", "1.1", "1.2", "1.3", "1.4"],
+  "v1_3": {
+    "added": ["CrossModelRoles: per-suite RoleRegistry + roles_disjoint gate + per-category AuthorRouting"],
+    "evidence": "_workspace/cm_test/battery/results/VERDICT-battery.md + DESIGN-v1.3-input.md (gitignored sandbox; capability evidence only, not recorded into ledger/corpus)",
+    "findings_applied": ["Author capability does NOT transfer across categories (route per-category)", "grok-build = default Holdout curator", "Red/Judge commodity (metrics saturate)", "model-gating must be principled (ReDoS guard v3)"]
+  },
+  "round3": {
+    "version": "1.3",
+    "method": "PGF 3-perspective self-review (feasibility/risk/architecture) + PG notation + adversarial",
+    "verdict_in": "REVISE",
+    "tally": {"critical": 1, "high": 4, "medium": 3},
+    "fixes_applied_in_v1_4": {
+      "C1": "roles_disjoint would fail-closed the 11 suites -> grandfather advisory (roles_unprovisioned, non-blocking)",
+      "H1": "split two independence properties; model layer is label-based defense-in-depth, not the binding guarantee",
+      "H2": "gate only binding pairs (Author!=Holdout, Author!=Judge); drop curator!=judge over-constraint",
+      "H3": "RoleRegistry + suite.category registered as committed schema contracts",
+      "H4": "per-category AuthorRouting keyed on suite.category map",
+      "M1": "curator default configurable (cm_test tentative grok-build), not hardcoded",
+      "M3": "AI_route_author_by_category naming for the meta routing function"
+    },
+    "verdict_out": "PASS (Critical=0, High=0)"
+  },
+  "unresolved_issues": [],
+  "next_action": "operator decision: plan->execute the P0 set (P0-3, P0-1, P0-2+frozen-holdout, P0-4) + CrossModelRoles; optionally promote VERDICT-battery.md out of the gitignored sandbox (M2); or targeted Judge-only metric-hardening if confident Judge ranking becomes critical-path",
+  "residual_note": "v1.4 PASS. Residual (accepted): (M2) cm_test evidence in gitignored _workspace sandbox -> promote or embed for a committed design; cm_test is single-fixture-per-category (tiering not fine ranking) and does not itself test independence; model-id disjointness (property ii) is label-based by construction (structural freeze, property i, remains binding)",
+  "scope_note": "design + design-verification only; implementation deferred"
+}

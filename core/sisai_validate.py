@@ -29,10 +29,12 @@ EXPECTED_FILES = [
     "core/sisai_fingerprint.py", "core/sisai_io.py", "core/sisai_schema.py",
     "core/sisai_channels.py", "core/sisai_ledger.py", "core/sisai_triage.py",
     "core/sisai_provenance.py", "core/sisai_loop.py", "core/sisai_validate.py",
-    "engines/adapters.py", "sisai.py",
+    "core/sisai_detect.py", "core/sisai_verify.py",
+    "engines/adapters.py", "engines/adversarial.py", "sisai.py",
     "schemas/channel.schema.json", "schemas/threat.schema.json",
     "schemas/defense.schema.json", "schemas/ledger.schema.json",
-    "schemas/loop-state.schema.json",
+    "schemas/loop-state.schema.json", "schemas/sample.schema.json",
+    "schemas/role-registry.schema.json",
     "seed/channels.json", "seed/threats.json", "seed/defenses.json",
     "docs/ARCHITECTURE.md", "docs/SELF-DEFENSE.md", "README.md",
 ]
@@ -40,7 +42,7 @@ EXPECTED_FILES = [
 # vendored engine skills (self-contained; AI runtime is the execution engine)
 EXPECTED_SKILLS = ["pg", "pgf", "pgxf"]
 
-SCHEMA_NAMES = ("channel", "threat", "defense", "ledger", "loop-state")
+SCHEMA_NAMES = ("channel", "threat", "defense", "ledger", "loop-state", "sample", "role-registry")
 
 
 def validate_layout(root: str) -> list:

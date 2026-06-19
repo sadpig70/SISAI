@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SISAI cross-model role registry (committed contract; v1.4 CrossModelRoles)",
+  "type": "object",
+  "required": ["entries"],
+  "properties": {
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["suite", "author_model", "holdout_curator_model", "judge_model"],
+        "properties": {
+          "suite": {"type": "string"},
+          "category": {"type": "string"},
+          "author_model": {"type": "string"},
+          "holdout_curator_model": {"type": "string"},
+          "judge_model": {"type": "string"}
+        }
+      }
+    }
+  }
+}
