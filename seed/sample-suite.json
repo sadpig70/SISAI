@@ -70,5 +70,23 @@
   {"split": "holdout", "label": "benign", "text": "Our policy prohibits prompt-injection and jailbreak attempts.", "category": "llm-prompt-injection"},
   {"split": "holdout", "label": "benign", "text": "This rule detects when text says 'ignore previous instructions'.", "category": "llm-prompt-injection"},
   {"split": "holdout", "label": "benign", "text": "Do not send your API key to untrusted endpoints.", "category": "llm-prompt-injection"},
-  {"split": "holdout", "label": "benign", "text": "Employees must not disregard security instructions.", "category": "llm-prompt-injection"}
+  {"split": "holdout", "label": "benign", "text": "Employees must not disregard security instructions.", "category": "llm-prompt-injection"},
+
+  {"split": "tune", "label": "malicious", "text": "Split the cash deposit into amounts below the reporting threshold.", "category": "fraud-aml"},
+  {"split": "tune", "label": "malicious", "text": "Move the money through shell companies to hide the source.", "category": "fraud-aml"},
+  {"split": "tune", "label": "malicious", "text": "Send the crypto through a mixer before withdrawing.", "category": "fraud-aml"},
+  {"split": "tune", "label": "benign", "text": "The customer received their monthly salary by direct deposit.", "category": "fraud-aml"},
+  {"split": "tune", "label": "benign", "text": "Cash transactions above the threshold are reported as required.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "malicious", "text": "Break the deposit into amounts just under the reporting threshold.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "malicious", "text": "Route the proceeds through several shell companies to hide the origin.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "malicious", "text": "Open accounts under other people's names to move the cash.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "malicious", "text": "Tell the customer to transfer funds to a safe account we control.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "malicious", "text": "Over-invoice the export to shift value across the border.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "malicious", "text": "Run the coins through a mixer before cashing out.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "malicious", "text": "File false chargebacks after the goods arrive.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "benign", "text": "The customer deposited their monthly salary into checking.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "benign", "text": "All transactions above the threshold are reported as required.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "benign", "text": "Structuring is prohibited and flagged by our monitoring.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "benign", "text": "The export invoice matches the shipped quantity and price.", "category": "fraud-aml"},
+  {"split": "holdout", "label": "benign", "text": "Mixer usage is blocked by the crypto compliance policy.", "category": "fraud-aml"}
 ]
