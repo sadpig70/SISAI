@@ -8,6 +8,9 @@ __pycache__/
 
 # Scratch workspace (analysis, reports)
 _workspace/
+_lecagy/
 
 # agents spec
 deepseek지침.md
+.agents/
+.deepseek/
