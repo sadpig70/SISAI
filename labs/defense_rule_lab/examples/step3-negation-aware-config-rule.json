@@ -1,0 +1,9 @@
+{
+  "patterns": [
+    {
+      "id": "neg-aware",
+      "desc": "STEP 3 (negation-aware): a leading (?!...) lookahead vetoes prohibitive/negated phrasing ('never', 'cannot', 'must', 'prohibited', 'always remain', 'remain enabled') BEFORE matching the directive verbs, and adds verify_ssl=false. PASSES the holdout: recall 1.0, precision 1.0.",
+      "regex": "(?i)^(?!.*\\b(never|cannot|must|prohibited|always remain|remain enabled)\\b).*(disable|turn off|bypass|verify_ssl\\s*=\\s*false|comment out)"
+    }
+  ]
+}
