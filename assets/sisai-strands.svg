@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR','Segoe UI',Helvetica,Arial,sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="'Segoe UI',Helvetica,Arial,sans-serif">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0b1220"/>
@@ -25,20 +25,20 @@
 
   <!-- strand A -->
   <rect x="60" y="200" width="330" height="120" rx="14" fill="url(#card)" stroke="#2c416b" stroke-width="1"/>
-  <text x="225" y="236" text-anchor="middle" fill="#7fa8e6" font-size="19" font-weight="700">가닥 A &#183; ThreatIntel</text>
-  <text x="225" y="268" text-anchor="middle" fill="#9db4d8" font-size="15">채널 스캔 &#8594; 위협 수집 &#183; 분류</text>
+  <text x="225" y="236" text-anchor="middle" fill="#7fa8e6" font-size="19" font-weight="700">Strand A &#183; ThreatIntel</text>
+  <text x="225" y="268" text-anchor="middle" fill="#9db4d8" font-size="15">channel scan &#8594; threat collection &#183; classification</text>
   <text x="225" y="296" text-anchor="middle" fill="#6f86ad" font-size="13">triage &#183; coverage &#183; blind-spot watch</text>
 
   <!-- strand B -->
   <rect x="435" y="200" width="330" height="120" rx="14" fill="url(#card)" stroke="#2c416b" stroke-width="1"/>
-  <text x="600" y="236" text-anchor="middle" fill="#7fe0a8" font-size="19" font-weight="700">가닥 B &#183; DefenseSynth</text>
-  <text x="600" y="268" text-anchor="middle" fill="#9db4d8" font-size="15">외부 방어 검색 &#8594; 없으면 자체 설계</text>
+  <text x="600" y="236" text-anchor="middle" fill="#7fe0a8" font-size="19" font-weight="700">Strand B &#183; DefenseSynth</text>
+  <text x="600" y="268" text-anchor="middle" fill="#9db4d8" font-size="15">external defense search &#8594; self-design if none</text>
   <text x="600" y="296" text-anchor="middle" fill="#6f86ad" font-size="13">external-first &#8594; pgf full-cycle</text>
 
   <!-- strand C -->
   <rect x="810" y="200" width="330" height="120" rx="14" fill="url(#card)" stroke="#2c416b" stroke-width="1"/>
-  <text x="975" y="236" text-anchor="middle" fill="#f0d68a" font-size="19" font-weight="700">가닥 C &#183; DetectOps</text>
-  <text x="975" y="268" text-anchor="middle" fill="#9db4d8" font-size="15">탐지 규칙 &#183; 예방 통제 &#183; 보고서 운영</text>
+  <text x="975" y="236" text-anchor="middle" fill="#f0d68a" font-size="19" font-weight="700">Strand C &#183; DetectOps</text>
+  <text x="975" y="268" text-anchor="middle" fill="#9db4d8" font-size="15">detection rules &#183; prevention controls &#183; reports</text>
   <text x="975" y="296" text-anchor="middle" fill="#6f86ad" font-size="13">verify &#8594; record &#8594; reuse</text>
 
   <!-- strands into the deterministic backbone -->
@@ -48,26 +48,26 @@
 
   <!-- deterministic backbone -->
   <rect x="310" y="396" width="580" height="94" rx="14" fill="#2a2615" stroke="#b79438" stroke-width="2"/>
-  <text x="600" y="433" text-anchor="middle" fill="#f0d68a" font-size="20" font-weight="700">백본 &#183; SISAI Core (단일 출처 &#183; 결정론)</text>
+  <text x="600" y="433" text-anchor="middle" fill="#f0d68a" font-size="20" font-weight="700">Backbone &#183; SISAI Core (single source &#183; deterministic)</text>
   <text x="600" y="463" text-anchor="middle" fill="#cdb87f" font-size="15">channels &#183; ledger &#183; diversity &#183; triage &#183; provenance &#183; loop</text>
 
   <!-- verified feedback loop -->
   <path d="M892,442 C1048,456 1150,430 1150,350 C1150,320 1124,306 1088,304"
         fill="none" stroke="#3a8f5f" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#arrowG)"/>
-  <text x="1010" y="486" text-anchor="middle" fill="#7fe0a8" font-size="14" font-weight="700">검증된 방어 &#8594; corpus 환류 (염기쌍)</text>
+  <text x="1010" y="486" text-anchor="middle" fill="#7fe0a8" font-size="14" font-weight="700">verified defense &#8594; corpus feedback (base pairs)</text>
 
   <!-- channel expansion loop -->
   <path d="M308,442 C152,456 50,430 50,350 C50,320 76,306 112,304"
         fill="none" stroke="#5b86b4" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
-  <text x="190" y="486" text-anchor="middle" fill="#7fa8e6" font-size="14" font-weight="700">채널 발견 &#8594; ledger &#8594; 재사용</text>
+  <text x="190" y="486" text-anchor="middle" fill="#7fa8e6" font-size="14" font-weight="700">channel discovery &#8594; ledger &#8594; reuse</text>
 
   <!-- invariant bar -->
   <polygon points="218,532 232,532 225,520" fill="#b79438"/>
   <polygon points="593,532 607,532 600,520" fill="#b79438"/>
   <polygon points="968,532 982,532 975,520" fill="#b79438"/>
   <rect x="60" y="534" width="1080" height="62" rx="14" fill="#1d3457" stroke="#3f72c4" stroke-width="2"/>
-  <text x="600" y="560" text-anchor="middle" fill="#eaf0fb" font-size="17" font-weight="700">결정론 경계 = 1차 prompt-injection 방어</text>
-  <text x="600" y="584" text-anchor="middle" fill="#9db4d8" font-size="14">수집된 외부 텍스트는 data일 뿐 control flow를 변경하지 못한다 &#183; 검증 전 feedback 금지</text>
+  <text x="600" y="560" text-anchor="middle" fill="#eaf0fb" font-size="17" font-weight="700">deterministic boundary = first-line prompt-injection defense</text>
+  <text x="600" y="584" text-anchor="middle" fill="#9db4d8" font-size="14">collected external text is data only and cannot alter control flow &#183; no feedback before verification</text>
 
-  <text x="60" y="620" fill="#64789c" font-size="14">위협 감지 &#8594; 방어 합성 &#8594; 운영 검증 &#8594; corpus 환류 &#8594; 다음 turn의 더 강한 방어</text>
+  <text x="60" y="620" fill="#64789c" font-size="14">threat sensing &#8594; defense synthesis &#8594; operational verification &#8594; corpus feedback &#8594; stronger defense next turn</text>
 </svg>
