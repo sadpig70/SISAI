@@ -1,69 +1,73 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 560" font-family="'Segoe UI','Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR','Segoe UI',Helvetica,Arial,sans-serif">
   <defs>
-    <marker id="arr" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L8,3 L0,6 z" fill="#5b6b7b"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#142536"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c2c44"/>
+      <stop offset="1" stop-color="#162232"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#5b86b4"/>
     </marker>
-    <marker id="arrFb" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L9,3.2 L0,6.4 z" fill="#c0552d"/>
+    <marker id="arrowG" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#3a8f5f"/>
     </marker>
   </defs>
 
-  <!-- backdrop (keeps it readable in GitHub dark mode) -->
-  <rect x="0" y="0" width="920" height="560" rx="14" fill="#ffffff"/>
-  <rect x="0.5" y="0.5" width="919" height="559" rx="14" fill="none" stroke="#e3e7ec"/>
+  <rect width="1200" height="630" fill="url(#bg)"/>
 
-  <!-- title -->
-  <text x="460" y="38" text-anchor="middle" font-size="20" font-weight="700" fill="#1f2a37">SISAI — Three Strands ⊕ One Backbone (a non-converging spiral)</text>
+  <!-- header (HELIX-loop style) -->
+  <text x="60" y="80" fill="#eaf0fb" font-size="40" font-weight="700">SISAI</text>
+  <text x="60" y="118" fill="#9db4d8" font-size="22">three strands + single backbone — verified defenses compound without convergence</text>
+  <text x="60" y="150" fill="#6f86ad" font-size="15">ThreatIntel &#183; DefenseSynth &#183; DetectOps &#183; self-contained &#183; deterministic &#183; defensive-only</text>
 
-  <!-- ===== Strand A : ThreatIntel ===== -->
-  <rect x="30" y="64" width="268" height="96" rx="10" fill="#e9f1fb" stroke="#2f6fb0" stroke-width="1.6"/>
-  <rect x="30" y="64" width="268" height="26" rx="10" fill="#2f6fb0"/>
-  <rect x="30" y="78" width="268" height="12" fill="#2f6fb0"/>
-  <text x="164" y="82" text-anchor="middle" font-size="14.5" font-weight="700" fill="#ffffff">Strand A · ThreatIntel</text>
-  <text x="164" y="116" text-anchor="middle" font-size="14" fill="#1f2a37">Channel scan → collect &amp; classify threats</text>
-  <text x="164" y="140" text-anchor="middle" font-size="11.5" fill="#5b6b7b">(triage · blind-spot watch)</text>
+  <!-- strand A -->
+  <rect x="60" y="200" width="330" height="120" rx="14" fill="url(#card)" stroke="#2c416b" stroke-width="1"/>
+  <text x="225" y="236" text-anchor="middle" fill="#7fa8e6" font-size="19" font-weight="700">가닥 A &#183; ThreatIntel</text>
+  <text x="225" y="268" text-anchor="middle" fill="#9db4d8" font-size="15">채널 스캔 &#8594; 위협 수집 &#183; 분류</text>
+  <text x="225" y="296" text-anchor="middle" fill="#6f86ad" font-size="13">triage &#183; coverage &#183; blind-spot watch</text>
 
-  <!-- ===== Strand B : DefenseSynth ===== -->
-  <rect x="326" y="64" width="268" height="96" rx="10" fill="#e9f6ee" stroke="#2e8b57" stroke-width="1.6"/>
-  <rect x="326" y="64" width="268" height="26" rx="10" fill="#2e8b57"/>
-  <rect x="326" y="78" width="268" height="12" fill="#2e8b57"/>
-  <text x="460" y="82" text-anchor="middle" font-size="14.5" font-weight="700" fill="#ffffff">Strand B · DefenseSynth</text>
-  <text x="460" y="116" text-anchor="middle" font-size="14" fill="#1f2a37">External search → self-design if none</text>
-  <text x="460" y="140" text-anchor="middle" font-size="11.5" fill="#5b6b7b">(external-first → pgf design)</text>
+  <!-- strand B -->
+  <rect x="435" y="200" width="330" height="120" rx="14" fill="url(#card)" stroke="#2c416b" stroke-width="1"/>
+  <text x="600" y="236" text-anchor="middle" fill="#7fe0a8" font-size="19" font-weight="700">가닥 B &#183; DefenseSynth</text>
+  <text x="600" y="268" text-anchor="middle" fill="#9db4d8" font-size="15">외부 방어 검색 &#8594; 없으면 자체 설계</text>
+  <text x="600" y="296" text-anchor="middle" fill="#6f86ad" font-size="13">external-first &#8594; pgf full-cycle</text>
 
-  <!-- ===== Strand C : DetectOps ===== -->
-  <rect x="622" y="64" width="268" height="96" rx="10" fill="#f3ecfb" stroke="#7a4fb0" stroke-width="1.6"/>
-  <rect x="622" y="64" width="268" height="26" rx="10" fill="#7a4fb0"/>
-  <rect x="622" y="78" width="268" height="12" fill="#7a4fb0"/>
-  <text x="756" y="82" text-anchor="middle" font-size="14.5" font-weight="700" fill="#ffffff">Strand C · DetectOps</text>
-  <text x="756" y="116" text-anchor="middle" font-size="14" fill="#1f2a37">Operate detection rules / reports</text>
-  <text x="756" y="140" text-anchor="middle" font-size="11.5" fill="#5b6b7b">(results → corpus feedback)</text>
+  <!-- strand C -->
+  <rect x="810" y="200" width="330" height="120" rx="14" fill="url(#card)" stroke="#2c416b" stroke-width="1"/>
+  <text x="975" y="236" text-anchor="middle" fill="#f0d68a" font-size="19" font-weight="700">가닥 C &#183; DetectOps</text>
+  <text x="975" y="268" text-anchor="middle" fill="#9db4d8" font-size="15">탐지 규칙 &#183; 예방 통제 &#183; 보고서 운영</text>
+  <text x="975" y="296" text-anchor="middle" fill="#6f86ad" font-size="13">verify &#8594; record &#8594; reuse</text>
 
-  <!-- converging arrows : strands -> backbone -->
-  <path d="M164,160 L330,214" fill="none" stroke="#5b6b7b" stroke-width="1.8" marker-end="url(#arr)"/>
-  <path d="M460,160 L460,214" fill="none" stroke="#5b6b7b" stroke-width="1.8" marker-end="url(#arr)"/>
-  <path d="M756,160 L590,214" fill="none" stroke="#5b6b7b" stroke-width="1.8" marker-end="url(#arr)"/>
+  <!-- strands into the deterministic backbone -->
+  <path d="M225,320 C280,365 382,382 466,400" fill="none" stroke="#5b86b4" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <path d="M600,320 L600,393" fill="none" stroke="#5b86b4" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <path d="M975,320 C920,365 818,382 734,400" fill="none" stroke="#5b86b4" stroke-width="2.5" marker-end="url(#arrow)"/>
 
-  <!-- ===== Backbone (core/) ===== -->
-  <rect x="140" y="218" width="640" height="92" rx="12" fill="#1f2a37"/>
-  <text x="460" y="252" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">Backbone (core/) — single-source deterministic substrate</text>
-  <text x="460" y="284" text-anchor="middle" font-size="14" fill="#b8c4d2" letter-spacing="0.3">channels · ledger · diversity · triage · provenance · loop</text>
+  <!-- deterministic backbone -->
+  <rect x="310" y="396" width="580" height="94" rx="14" fill="#2a2615" stroke="#b79438" stroke-width="2"/>
+  <text x="600" y="433" text-anchor="middle" fill="#f0d68a" font-size="20" font-weight="700">백본 &#183; SISAI Core (단일 출처 &#183; 결정론)</text>
+  <text x="600" y="463" text-anchor="middle" fill="#cdb87f" font-size="15">channels &#183; ledger &#183; diversity &#183; triage &#183; provenance &#183; loop</text>
 
-  <!-- determinism note -->
-  <text x="460" y="330" text-anchor="middle" font-size="11.5" fill="#5b6b7b">Deterministic boundary = first-line injection defense (collected text can't alter control flow) · defensive-only</text>
+  <!-- verified feedback loop -->
+  <path d="M892,442 C1048,456 1150,430 1150,350 C1150,320 1124,306 1088,304"
+        fill="none" stroke="#3a8f5f" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#arrowG)"/>
+  <text x="1010" y="486" text-anchor="middle" fill="#7fe0a8" font-size="14" font-weight="700">검증된 방어 &#8594; corpus 환류 (염기쌍)</text>
 
-  <!-- feedback pill -->
-  <rect x="150" y="402" width="620" height="62" rx="12" fill="#fbeee6" stroke="#c0552d" stroke-width="1.6"/>
-  <text x="460" y="428" text-anchor="middle" font-size="13.5" font-weight="700" fill="#9c3f1c">Verified defense → corpus feedback (base pairs)</text>
-  <text x="460" y="450" text-anchor="middle" font-size="13" fill="#9c3f1c">→ next turn compounds into better defense synthesis (a non-converging spiral)</text>
+  <!-- channel expansion loop -->
+  <path d="M308,442 C152,456 50,430 50,350 C50,320 76,306 112,304"
+        fill="none" stroke="#5b86b4" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
+  <text x="190" y="486" text-anchor="middle" fill="#7fa8e6" font-size="14" font-weight="700">채널 발견 &#8594; ledger &#8594; 재사용</text>
 
-  <!-- backbone -> feedback (down) -->
-  <path d="M460,310 L460,400" fill="none" stroke="#c0552d" stroke-width="2" marker-end="url(#arrFb)"/>
+  <!-- invariant bar -->
+  <polygon points="218,532 232,532 225,520" fill="#b79438"/>
+  <polygon points="593,532 607,532 600,520" fill="#b79438"/>
+  <polygon points="968,532 982,532 975,520" fill="#b79438"/>
+  <rect x="60" y="534" width="1080" height="62" rx="14" fill="#1d3457" stroke="#3f72c4" stroke-width="2"/>
+  <text x="600" y="560" text-anchor="middle" fill="#eaf0fb" font-size="17" font-weight="700">결정론 경계 = 1차 prompt-injection 방어</text>
+  <text x="600" y="584" text-anchor="middle" fill="#9db4d8" font-size="14">수집된 외부 텍스트는 data일 뿐 control flow를 변경하지 못한다 &#183; 검증 전 feedback 금지</text>
 
-  <!-- feedback -> strands (spiral return up the left) -->
-  <path d="M150,433 C40,433 40,112 158,112" fill="none" stroke="#c0552d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrFb)"/>
-  <!-- feedback -> strand C (spiral return up the right) -->
-  <path d="M770,433 C880,433 880,112 762,112" fill="none" stroke="#c0552d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrFb)"/>
-
-  <text x="460" y="500" text-anchor="middle" font-size="11" fill="#8a98a6">Channels are first-class assets — discover · ledger · reuse</text>
+  <text x="60" y="620" fill="#64789c" font-size="14">위협 감지 &#8594; 방어 합성 &#8594; 운영 검증 &#8594; corpus 환류 &#8594; 다음 turn의 더 강한 방어</text>
 </svg>
