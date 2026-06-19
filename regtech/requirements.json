@@ -1,0 +1,54 @@
+{
+  "framework": "EU-AI-Act",
+  "registry_status": "DRAFT — requires compliance/legal SME validation; not a conformity assessment",
+  "evidence_kinds": {
+    "detection-rule": "a committed detection/prevention control (rule artifact)",
+    "verification-record": "a verification basis (e.g. recall/precision on a frozen holdout)",
+    "provenance-lineage": "source/channel/verification lineage tracing the evidence to its origin",
+    "threat-coverage": "the requirement's risk is mapped to a recorded threat"
+  },
+  "requirements": [
+    {
+      "req_id": "EUAIA-AIV-2b",
+      "annex_iv_item": "2(b) design specifications & general logic of the system",
+      "obligation": "Document the detection/prevention logic and how it was derived.",
+      "required_evidence_kinds": ["detection-rule", "provenance-lineage"],
+      "retention_months": 120
+    },
+    {
+      "req_id": "EUAIA-AIV-2g",
+      "annex_iv_item": "2(g) validation and testing procedures and results",
+      "obligation": "Show validation procedures and measured results for each control.",
+      "required_evidence_kinds": ["verification-record"],
+      "retention_months": 120
+    },
+    {
+      "req_id": "EUAIA-AIV-3",
+      "annex_iv_item": "3 monitoring, functioning and control of the system",
+      "obligation": "Demonstrate ongoing monitoring and control-drift detection.",
+      "required_evidence_kinds": ["detection-rule", "threat-coverage"],
+      "retention_months": 24
+    },
+    {
+      "req_id": "EUAIA-AIV-4",
+      "annex_iv_item": "4 risk management system",
+      "obligation": "Identify and prioritise risks (threats) and their mitigations.",
+      "required_evidence_kinds": ["threat-coverage"],
+      "retention_months": 24
+    },
+    {
+      "req_id": "EUAIA-AIV-5",
+      "annex_iv_item": "5 changes to the system through its lifecycle",
+      "obligation": "Track changes with reproducible, traceable evidence over time.",
+      "required_evidence_kinds": ["verification-record", "provenance-lineage"],
+      "retention_months": 120
+    },
+    {
+      "req_id": "EUAIA-AIV-6",
+      "annex_iv_item": "6 provenance and data governance",
+      "obligation": "Enforce source provenance for all evidence and inputs.",
+      "required_evidence_kinds": ["provenance-lineage"],
+      "retention_months": 24
+    }
+  ]
+}

@@ -7,6 +7,13 @@
       "author_model": "example-author-model",
       "holdout_curator_model": "grok-build",
       "judge_model": "example-judge-model"
+    },
+    {
+      "suite": "trust-safety",
+      "category": "trust-safety",
+      "author_model": "ts-author-model",
+      "holdout_curator_model": "ts-curator-model",
+      "judge_model": "ts-judge-model"
     }
   ]
 }
