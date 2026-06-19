@@ -88,11 +88,13 @@ SISAI/
 │   ├── sisai_loop.py         # next_action (3 strands) + plan_defense (external first)
 │   ├── sisai_io.py           # atomic crash-safe writes
 │   ├── sisai_schema.py       # JSON-Schema-subset contract checker
-│   └── sisai_validate.py     # structure/contract validation
-├── engines/adapters.py # native output → backbone projection (pure)
+│   ├── sisai_validate.py     # structure/contract validation
+│   ├── sisai_detect.py       # v1.4: inert hygiene, rule compile/scan, blue_run, atomic_append_samples (holdout freeze)
+│   └── sisai_verify.py       # v1.4: split-aware verify_suite (frozen holdout) + roles_disjoint (cross-model)
+├── engines/            # adapters.py (backbone projection) · adversarial.py (v1.4 red/blue loop + author routing)
 ├── skills/{pg,pgf,pgxf}# vendored — AI-runtime driving engines (self-contained)
-├── schemas/            # 5 contracts (channel/threat/defense/ledger/loop-state)
-├── seed/               # seed corpus (summary.md → taxonomy/defense/channel)
+├── schemas/            # 7 contracts (channel/threat/defense/ledger/loop-state + v1.4: sample/role-registry)
+├── seed/               # seed corpus (channels/threats/defenses + v1.4: sample-suite/role-registry examples)
 ├── docs/               # ARCHITECTURE · SELF-DEFENSE · INSTRUCTIONS · RUNBOOK
 ├── examples/           # sample state
 └── tests/              # deterministic unittest

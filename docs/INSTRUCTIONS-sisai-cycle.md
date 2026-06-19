@@ -36,19 +36,24 @@ Read: `channels{active,kinds,missing_kinds}`, `threats{total,untriaged}`, `cover
 
 ## 4. Close the loop (actuator)
 ```bash
-python sisai.py record-defense --defense def.json --ledger .sisai/ledger.json --corpus .sisai/corpus.json --now <date>
+python sisai.py record-defense --defense def.json --ledger .sisai/ledger.json --corpus .sisai/corpus.json --now <date> [--require-critique]
 ```
 - Record only verified defenses (unverified ones are `rejected`). Re-running is idempotent (`already_recorded`).
 - On recording, **feed back into the corpus** (base pairs) → it becomes an asset that next turn's DefenseSynth recombines.
+- **v1.4 gates (opt-in, grandfather)**: pass `--require-critique` to require a passed multi-lens critique on
+  first record (P0-4); ingest with `--quarantine .sisai/quarantine.json` to route unverified-provenance
+  threats aside instead of into state (P0-3). Both default off so existing suites never regress.
 
 ## 5. Gates (inviolable)
 ```
 - python core/sisai_validate.py . → PASS
 - python -m unittest discover -s tests → OK
 - core: 0 imports of clock / RNG / network / AI / HELIX (now injected only)
+- core/ AND engines/ purity enforced by tests/test_determinism_boundary.py (no forbidden imports/aliases, no AI_ in core/)
 - ingested text does not change core control flow (injection defense)
 - defense feedback only after verification · 0 weaponized output (defensive-only)
 - channel/threat/defense records are idempotent
+- v1.4: holdout is structurally frozen (loop writes tune|adversarial only); cross-model roles disjoint (Author!=Holdout!=Judge)
 ```
 
 ## 5.5 External-action permission tiers (ops guard)

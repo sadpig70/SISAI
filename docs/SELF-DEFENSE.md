@@ -28,6 +28,27 @@
 5. **defensive-only**: output is detection/prevention/reports. Weaponized output (working exploits, automated
    targeted attacks) is out of design scope and is not eligible for loading into the corpus/ledger.
 
+## v1.4 self-verification gates (strengthen the invariants above)
+
+The SISAIImprove @v1.4 backbone adds deterministic gates that harden self-defense (all opt-in +
+grandfather, so existing suites never regress — see `docs/ARCHITECTURE.md` §5b):
+
+- **ProvenanceGate** (`core/sisai_provenance`) strengthens *Prompt injection* + *Data poisoning* defense:
+  source-supplied provenance is **stripped** before the gate (anti fail-open — a collected page cannot
+  self-assert `verified`), trust is **host-derived** (`authority_from_url`, never AI-judged), and unverified
+  threats are **quarantined** rather than ingested (`ingest-threats --quarantine`).
+- **CritiqueGate** (`is_critiqued`, wired in `record-defense --require-critique`) extends invariant #2: a
+  multi-lens critique must pass before a defense's first record.
+- **AdversarialVerify + HeldoutBench** (`engines/adversarial`, `core/sisai_verify`): defenses are hardened
+  against red-team variants and graded on a **structurally frozen holdout** — the loop writes only
+  `split in {tune, adversarial}` (`atomic_append_samples` refuses `holdout`), so the benchmark cannot be
+  gamed. Holdout independence is a *mechanism*, not a label.
+- **CrossModelRoles** (`roles_disjoint`): Author != Holdout != Judge (binding pairs) per suite — a
+  cross-model layer on top of the structural freeze, so no single runtime authors, benchmarks, and judges
+  the same suite.
+- **DeterminismGuard** (`tests/test_determinism_boundary.py`): an AST test enforcing invariant #1 in CI —
+  `core/`+`engines/` carry no clock/RNG/network/subprocess imports and no `AI_` symbols in `core/`.
+
 ## Operational recommendations (meta layer — AI runtime)
 
 - Process ingested input **in isolation** (separate context / minimized tool permissions). Never promote external text to system instructions.

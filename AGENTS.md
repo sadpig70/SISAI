@@ -21,8 +21,8 @@ and **independent of HELIX and global settings**.
 
 # Local workspace environment
 - skills folder: `skills/` (vendored: `pg`, `pgf`, `pgxf` — AI-runtime driving engines, parser-free)
-- backbone (deterministic stdlib): `core/` (fingerprint·channels·ledger·triage·diversity·provenance·loop·io·schema·validate)
-- adapters: `engines/adapters.py` · driver: `sisai.py` · contracts: `schemas/` · seed: `seed/`
+- backbone (deterministic stdlib): `core/` (fingerprint·channels·ledger·triage·provenance·loop·io·schema·validate · v1.4: detect·verify)
+- adapters/engines: `engines/adapters.py` · `engines/adversarial.py` (v1.4 red/blue loop, injected cognition) · driver: `sisai.py` · contracts: `schemas/` (7) · seed: `seed/`
 - runtime artifacts: `.sisai/` (channels.json·ledger.json·corpus.json — gitignore). Falls back to `seed/` if absent.
 - docs: `docs/` (ARCHITECTURE·SELF-DEFENSE·INSTRUCTIONS-sisai-cycle·RUNBOOK), `README.md`.
 

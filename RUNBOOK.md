@@ -17,8 +17,8 @@
 | one-turn status | `python sisai.py status --now <date>` | channels/threats/triage/defense-plan/next_action |
 | defense procurement strategy | `python sisai.py plan --now <date>` | ADOPT_EXTERNAL / DESIGN_DEFENSE |
 | channel discovery·recording | `python sisai.py discover-channel --channel ch.json --registry .sisai/channels.json` | dedup registration |
-| close the loop | `python sisai.py record-defense --defense def.json --ledger .sisai/ledger.json --corpus .sisai/corpus.json` | ledger + corpus feedback |
-| threat loading | `python sisai.py ingest-threats --threats new.json --ledger .sisai/ledger.json` | `.sisai/threats.json` after schema validation·dedup (RUN_THREAT_INTEL output) |
+| close the loop | `python sisai.py record-defense --defense def.json --ledger .sisai/ledger.json --corpus .sisai/corpus.json [--require-critique]` | ledger + corpus feedback (v1.4: `--require-critique` gates first record on a passed critique) |
+| threat loading | `python sisai.py ingest-threats --threats new.json --ledger .sisai/ledger.json [--quarantine .sisai/quarantine.json [--fetch-provenance prov.json]]` | `.sisai/threats.json` after schema validation·dedup (RUN_THREAT_INTEL output); v1.4: `--quarantine` routes unverified-provenance threats aside |
 
 ## 2. Validation·tests
 
