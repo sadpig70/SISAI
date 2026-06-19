@@ -34,24 +34,30 @@ from core.sisai_detect import compile_rule, scan                       # noqa: E
 from core.sisai_provenance import is_provenance_verified              # noqa: E402
 
 # Guard: veto defensive / third-person / policy / quoted-example framing before matching a directive.
-_GUARD = (r"(?i)^(?!.*\b(?:never|cannot|must\s+not|do\s+not|don't|should\s+not|prohibit|prohibits|"
-          r"prohibited|forbidden|attacker|tried|attempt|detect|detects|policy|describe|describes)\b)")
+_GUARD = (r"(?i)^(?!.*\b(?:never|cannot|can't|must\s*not|do\s*not|don't|should\s*not|prohibit\w*|"
+          r"forbidden|attacker|tried|attempt\w*|detect\w*|policy|describe\w*|quot\w*)\b)")
 
 INJECTION_BUNDLE = {
     "guard": _GUARD,
     "indicators": [
         {"id": "pi.override", "desc": "imperative override of prior instructions",
-         "regex": r"\b(?:ignore|disregard|forget|override|set\s+aside|dismiss)\b.{0,30}\b(?:previous|prior|earlier|above|preceding)\b.{0,20}\b(?:instruction|prompt|rule|direction|message)s?\b"},
+         "regex": r"\b(?:ignore|disregard|forget|override|set\s+aside|dismiss|pretend)\b.{0,30}\b(?:previous|prior|earlier|above|preceding)\b.{0,20}\b(?:instruction|prompt|rule|direction|message)s?\b"},
+        {"id": "pi.override-all", "desc": "discard everything stated earlier",
+         "regex": r"\b(?:forget|ignore|disregard)\b.{0,20}\b(?:everything|all)\b.{0,20}\b(?:earlier|above|before|said|told|stated)\b"},
+        {"id": "pi.override-pretend", "desc": "pretend the prior rules do not apply",
+         "regex": r"\bpretend\b.{0,20}\b(?:rules?|instructions?)\b.{0,15}\b(?:above|here|no\s+longer|don't\s+apply)\b"},
         {"id": "pi.role-hijack", "desc": "role / system-prompt override or jailbreak framing",
          "regex": r"\byou\s+are\s+now\b|\bact\s+as\b.{0,25}\b(?:unrestricted|no\s+restrictions?|dan|jailbroken)\b|\bdeveloper\s+mode\b|\bnew\s+(?:instructions?|system\s+prompt|persona)\s*:"},
+        {"id": "pi.role-norestrict", "desc": "claim of no restrictions / jailbreak state",
+         "regex": r"\b(?:from\s+now\s+on|you(?:\s+now)?\s+have)\b.{0,30}\bno\s+restrictions?\b"},
         {"id": "pi.prompt-exfil", "desc": "attempt to extract the system / hidden prompt",
-         "regex": r"\b(?:reveal|print|show|output|repeat|dump|leak|disclose)\b.{0,30}\b(?:system\s+prompt|your\s+(?:instructions|prompt|rules)|hidden\s+prompt|initial\s+prompt)\b"},
+         "regex": r"\b(?:reveal|print|show|output|repeat|dump|leak|disclose|spit\s+out)\b.{0,30}\b(?:system\s+prompt|your\s+(?:initial\s+)?(?:instructions|prompt|rules)|hidden\s+prompt|initial\s+(?:prompt|instructions?))\b"},
         {"id": "pi.embedded-exec", "desc": "directive to run embedded/attached code",
          "regex": r"\b(?:run|execute|eval|invoke)\b.{0,30}\b(?:the\s+following|this|below|attached|embedded)\b.{0,25}\b(?:command|code|script|payload)\b"},
         {"id": "pi.attached-exec", "desc": "directive to run an attached script",
          "regex": r"\b(?:run|execute|launch)\b.{0,20}\battached\b.{0,15}\bscript\b"},
         {"id": "pi.secret-exfil", "desc": "directive to send your own secrets to a sink",
-         "regex": r"\b(?:send|upload|post|forward|exfiltrate)\b.{0,20}\byour\b.{0,25}\b(?:api[\s_-]?key|token|secret|password|credential)s?\b"},
+         "regex": r"\b(?:send|upload|post|forward|exfiltrate|mail|email)\b.{0,20}\byour\b.{0,25}\b(?:api[\s_-]?key|token|secret|password|credential)s?\b"},
         {"id": "pi.hidden-marker", "desc": "directive concealed in an HTML comment or zero-width chars",
          "regex": r"<!--[^>]*?(?:ignore|system\s+prompt|exfiltrate|instruction|credential)[^>]*?-->|[​‌‍‎‏﻿]"},
     ],
