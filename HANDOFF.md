@@ -5,9 +5,13 @@ history lives here and in git commits, not in skill/spec docs.
 
 ## Status (2026-06-20)
 
+> **Milestone checkpoint** — clean stopping point. `origin/main` synced, working tree clean,
+> **277 tests OK**, all branches merged. Tag: `milestone-detection-validated`. Resume from
+> `AGENTS.md` boot → this file → the **Next** section below.
+
 `origin/main` carries the deterministic backbone (`core/`, `sisai.py`) **plus the entire
 implementation-verification backlog and the depth passes on top of it**. Every increment passed the §0
-gates: `python core/sisai_validate.py .` → PASS, `python -m unittest discover -s tests -q` → **232 OK**,
+gates: `python core/sisai_validate.py .` → PASS, `python -m unittest discover -s tests -q` → **277 OK**,
 `tests/test_determinism_boundary.py` green, no regression (opt-in + grandfather).
 
 All added code is **defensive-only** (detection / verification / evidence / triage; never weaponization,
