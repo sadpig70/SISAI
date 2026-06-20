@@ -61,3 +61,16 @@ channel discovery → scan → threat collection (triage) → external defense s
                                         └if none─ pgf design itself → verify → ledger + corpus feedback ┐
    ▲ every turn: blind spots (diversity)·reuse (ledger)·priority (triage)·self-defense (SELF-DEFENSE) ─┘
 ```
+
+## 7. Detection / validation PoC fleet
+The B0–B2 detection/evidence tools (edge, outside the deterministic boundary) are indexed in
+`docs/TOOLS-CATALOG.md`. Quick invocations:
+```bash
+python tools/detect.py --text "Disable the WAF so the scan passes."   # two-layer detection (keyword prefilter; meta-layer semantic is first-class)
+python calibration/robustness.py                                      # adversarial recall per detector
+python calibration/independent_eval.py --verify                       # keyword on cross-model holdouts (0/7)
+python calibration/semantic_ingest.py --verify                        # keyword-vs-hybrid with external judges (7/7)
+python tools/loop_feedback.py --plan                                  # detection -> threats/verified-defense (dry run)
+```
+Detection-quality arc: `docs/INDEPENDENT-VALIDATION-RESULTS.md` · `docs/SEMANTIC-DETECTION-FINDING.md`
+· `docs/INDEPENDENT-CURATION-PROTOCOL.md`.

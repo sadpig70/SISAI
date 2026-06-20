@@ -91,17 +91,17 @@ SISAI/
 │   ├── sisai_validate.py     # structure/contract validation
 │   ├── sisai_detect.py       # v1.4: inert hygiene, rule compile/scan, blue_run, atomic_append_samples (holdout freeze)
 │   └── sisai_verify.py       # v1.4: split-aware verify_suite (frozen holdout) + roles_disjoint (cross-model)
-├── engines/            # adapters.py (backbone projection) · adversarial.py (v1.4 red/blue loop + author routing)
-├── tools/              # PoC CLIs (edge): detect_pr · policy_compile · control_drift · benchmark_harness · prompt_shield · audit_export · soc_cluster · toolchain_sentinel
+├── engines/            # adapters.py · adversarial.py (red/blue loop) · detect_hybrid.py (keyword + injected semantic)
+├── tools/              # detection/evidence CLIs (edge): detect · detect_pr · policy_compile · control_drift · benchmark_harness · prompt_shield · audit_export · soc_cluster · toolchain_sentinel · loop_feedback
 ├── labs/               # education pack (defense_rule_lab — grade student rules on the frozen holdout)
-├── calibration/        # cross-model scoring · battery · robustness · independence protocol
+├── calibration/        # score · battery · robustness · independence · independent_eval · semantic_ingest · rounds
 ├── regtech/ · domain/  # B2 domain packs (DRAFT/synthetic: RegTech · fraud_aml · trust_safety · pharmacovigilance)
 ├── skills/{pg,pgf,pgxf}# vendored — AI-runtime driving engines (self-contained)
 ├── schemas/            # 7 contracts (channel/threat/defense/ledger/loop-state + v1.4: sample/role-registry)
-├── seed/               # seed corpus (channels/threats/defenses + v1.4: sample-suite/role-registry examples)
-├── docs/               # TECHNICAL-GUIDE · TOOLS-CATALOG · ARCHITECTURE · SELF-DEFENSE · INSTRUCTIONS · RUNBOOK
+├── seed/               # seed corpus (+ sample-suite/role-registry; independent-holdouts/ + semantic/ — cross-model validation)
+├── docs/               # TECHNICAL-GUIDE · TOOLS-CATALOG · ARCHITECTURE · SELF-DEFENSE · INSTRUCTIONS · RUNBOOK · CONVENTIONS · INDEPENDENT-* · SEMANTIC-DETECTION-FINDING
 ├── examples/           # sample state
-└── tests/              # deterministic unittest (232)
+└── tests/              # deterministic unittest (277)
 ```
 
 ## See more

@@ -68,6 +68,8 @@ backlog: **now (B0)** → **near (B1)** → **domain (B2, DRAFT/synthetic)**.
 
 ```bash
 python core/sisai_validate.py .
-python -m unittest discover -s tests -q          # 213 tests
+python -m unittest discover -s tests -q          # 277 tests
 python calibration/robustness.py                 # adversarial recall per detector
+python calibration/independent_eval.py --verify  # keyword on the independent holdouts (0/7)
+python calibration/semantic_ingest.py --verify   # keyword-vs-hybrid with external judges (7/7)
 ```
