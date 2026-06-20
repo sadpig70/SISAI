@@ -72,12 +72,22 @@ decision and never feeds back before verification + human approval.
 - **Live fetcher / channel scanner**: collection/external search is the AI meta-layer's job, simulated
   via injected provenance/cognition; not deterministic code.
 
+## Productionized (post-finding)
+
+- **Unified two-layer detection** (`tools/detect.py`): keyword prefilter + first-class injected
+  meta-layer semantic verdict; escalates (`semantic_recommended`) when no semantic supplied.
+- **Fresh-round guard** (`calibration/rounds.py`): `independent_eval.ingest` rejects a stale (identical)
+  holdout re-submission — re-validation must use a NEW round (no teach-to-the-benchmark).
+- **Loop feedback** (`tools/loop_feedback.py`): findings→threats, and the INDEPENDENTLY-verified
+  two-layer detector→defense corpus (honest — a non-independent category is rejected, keyword framed as
+  prefilter). `--plan` dry-run (7/7 verified); `--commit` is the operator-gated runtime-state closure.
+
 ## Next
 
-- **Semantic detection** — the 0/7 result shows keyword bundles don't generalize. The principled fix is
-  meta-layer (AI) detection over the deterministic core gate, re-validated on FRESH independent rounds.
-- **Second independent round** — after any detector improvement, request NEW curator submissions (never
-  reuse `seed/independent-holdouts/`) and re-run `calibration/independent_eval.py --verify`.
+- **Second independent round** — after any detector improvement, request NEW curator + judge
+  submissions (never reuse the frozen sets) and re-run `--verify`; the fresh-round guard enforces it.
+- **Operator closure** — run `tools/loop_feedback.py --commit` to feed verified detectors into the live
+  corpus (mutates `.sisai/`, advances `next_action`).
 - Real-data onboarding for B2 (gated: SME + regulatory), and a live fetcher interface for collection.
 
 ## Branches
