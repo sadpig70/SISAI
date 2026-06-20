@@ -48,6 +48,7 @@ backlog: **now (B0)** → **near (B1)** → **domain (B2, DRAFT/synthetic)**.
 | Module | Purpose | CLI |
 |---|---|---|
 | `calibration/robustness.py` | Measures each detector's adversarial recall + benign FP over `split=adversarial` variants (generalization beyond the holdout) | `[--json]` |
+| `calibration/battery.py` | Canonical cross-model battery (VERDICT M2): author/red/holdout/judge scoring of submissions vs canonical fixtures, aggregated mean+min. See `calibration/README.md` | `--submissions <subs.json>` |
 
 ## Invariants (every tool)
 
