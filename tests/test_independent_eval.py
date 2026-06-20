@@ -89,10 +89,13 @@ class TestIngestAndVerify(unittest.TestCase):
         self.assertFalse(ie.verify_independence("fraud-aml")["independent"])
 
 
-class TestRealInboxStaysHonest(unittest.TestCase):
-    def test_no_real_category_is_independent_yet(self):
-        # the committed inbox is empty; no shipped category may claim independence
+class TestIndependentBenchmark(unittest.TestCase):
+    def test_seven_ingested_zero_independent_baseline(self):
+        # 7 cross-model holdouts are ingested; 0 are cleared — the honest, externally-measured
+        # generalization baseline (see docs/INDEPENDENT-VALIDATION-RESULTS.md). If this ever becomes
+        # > 0 WITHOUT a fresh independent round, the frozen benchmark was taught to (forbidden).
         rep = ie.report()
+        self.assertEqual(rep["ingested_total"], 7)
         self.assertEqual(rep["independent_total"], 0)
 
 
