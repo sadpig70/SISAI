@@ -51,6 +51,8 @@ backlog: **now (B0)** → **near (B1)** → **domain (B2, DRAFT/synthetic)**.
 | `calibration/battery.py` | Canonical cross-model battery (VERDICT M2): author/red/holdout/judge scoring of submissions vs canonical fixtures, aggregated mean+min. See `calibration/README.md` | `--submissions <subs.json>` |
 | `calibration/independence.py` | Holdout independence protocol: factual curator≠author + `roles_disjoint` → verdict independent/single_author/roles_conflict/unprovisioned. Honestly reports the single-author gap; gates real independence | `[--json]` |
 | `calibration/independent_eval.py` | Independent-curation execution: ingest an external curator's holdout, re-grade the detector, decide independence (data-driven). See `docs/INDEPENDENT-CURATION-PROTOCOL.md` | `--ingest <sub.json> / --verify [--category]` |
+| `calibration/semantic_ingest.py` | Phase 2: ingest an external semantic JUDGE's per-row verdicts (3-way distinct author≠curator≠judge), grade keyword-vs-hybrid via `engines/detect_hybrid`, majority-vote consensus | `--ingest <sub.json> / --verify [--category]` |
+| `engines/detect_hybrid.py` | Two-layer detection combiner: keyword prefilter + injected semantic layer (semantic adjudicates, keyword audited) | (library) |
 
 ## Invariants (every tool)
 
