@@ -53,6 +53,7 @@ backlog: **now (B0)** → **near (B1)** → **domain (B2, DRAFT/synthetic)**.
 | `calibration/independent_eval.py` | Independent-curation execution: ingest an external curator's holdout, re-grade the detector, decide independence (data-driven). See `docs/INDEPENDENT-CURATION-PROTOCOL.md` | `--ingest <sub.json> / --verify [--category]` |
 | `calibration/semantic_ingest.py` | Phase 2: ingest an external semantic JUDGE's per-row verdicts (3-way distinct author≠curator≠judge), grade keyword-vs-hybrid via `engines/detect_hybrid`, majority-vote consensus | `--ingest <sub.json> / --verify [--category]` |
 | `engines/detect_hybrid.py` | Two-layer detection combiner: keyword prefilter + injected semantic layer (semantic adjudicates, keyword audited) | (library) |
+| `tools/detect.py` | Unified detection entry across all detectors: keyword prefilter + injected meta-layer semantic verdict; emits `semantic_recommended` escalation when none supplied | `--text/--file [--category]` |
 
 ## Invariants (every tool)
 

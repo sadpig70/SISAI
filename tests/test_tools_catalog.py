@@ -13,7 +13,7 @@ sys.path.insert(0, ROOT)
 
 # every shipped module that exposes a CLI _main
 CLI_MODULES = [
-    "tools.detect_pr", "tools.policy_compile", "tools.control_drift", "tools.benchmark_harness",
+    "tools.detect", "tools.detect_pr", "tools.policy_compile", "tools.control_drift", "tools.benchmark_harness",
     "tools.prompt_shield", "tools.audit_export", "tools.soc_cluster", "tools.toolchain_sentinel",
     "calibration.score", "calibration.robustness", "calibration.battery", "calibration.independence",
     "calibration.independent_eval", "calibration.semantic_ingest", "labs.defense_rule_lab.grade_rule",
