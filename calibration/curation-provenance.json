@@ -1,0 +1,13 @@
+{
+  "note": "FACTUAL record of who curated each category's frozen holdout vs who authored the detection rule. This is the honest ground truth, NOT the role-registry placeholders. Most categories are single-author (the same meta-layer authored both the rule and the holdout), which is an explicit limitation: a passing gate proves internal consistency + paraphrase robustness, not INDEPENDENT validation. When a distinct curator supplies a holdout, flip independent->true here (and provision roles in seed/role-registry.json).",
+  "entries": [
+    {"category": "config-tampering", "rule_author": "meta-layer", "holdout_curator": "meta-layer", "independent": false},
+    {"category": "supply-chain-tampering", "rule_author": "meta-layer", "holdout_curator": "meta-layer", "independent": false},
+    {"category": "access-control-weakening", "rule_author": "meta-layer", "holdout_curator": "meta-layer", "independent": false},
+    {"category": "llm-prompt-injection", "rule_author": "meta-layer", "holdout_curator": "meta-layer", "independent": false},
+    {"category": "fraud-aml", "rule_author": "meta-layer", "holdout_curator": "meta-layer", "independent": false},
+    {"category": "trust-safety", "rule_author": "meta-layer", "holdout_curator": "meta-layer", "independent": false},
+    {"category": "pharmacovigilance", "rule_author": "meta-layer", "holdout_curator": "meta-layer", "independent": false},
+    {"category": "EXAMPLE-independent", "rule_author": "author-model-A", "holdout_curator": "curator-model-B", "independent": true, "note": "demonstrates the independent path: a distinct curator curated the holdout"}
+  ]
+}

@@ -15,7 +15,7 @@ sys.path.insert(0, ROOT)
 CLI_MODULES = [
     "tools.detect_pr", "tools.policy_compile", "tools.control_drift", "tools.benchmark_harness",
     "tools.prompt_shield", "tools.audit_export", "tools.soc_cluster", "tools.toolchain_sentinel",
-    "calibration.score", "calibration.robustness", "calibration.battery",
+    "calibration.score", "calibration.robustness", "calibration.battery", "calibration.independence",
     "labs.defense_rule_lab.grade_rule",
     "regtech.evidence_chain", "domain.fraud_aml", "domain.trust_safety", "domain.pharmacovigilance",
 ]
