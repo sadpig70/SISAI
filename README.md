@@ -92,16 +92,22 @@ SISAI/
 │   ├── sisai_detect.py       # v1.4: inert hygiene, rule compile/scan, blue_run, atomic_append_samples (holdout freeze)
 │   └── sisai_verify.py       # v1.4: split-aware verify_suite (frozen holdout) + roles_disjoint (cross-model)
 ├── engines/            # adapters.py (backbone projection) · adversarial.py (v1.4 red/blue loop + author routing)
+├── tools/              # PoC CLIs (edge): detect_pr · policy_compile · control_drift · benchmark_harness · prompt_shield · audit_export · soc_cluster · toolchain_sentinel
+├── labs/               # education pack (defense_rule_lab — grade student rules on the frozen holdout)
+├── calibration/        # cross-model scoring · battery · robustness · independence protocol
+├── regtech/ · domain/  # B2 domain packs (DRAFT/synthetic: RegTech · fraud_aml · trust_safety · pharmacovigilance)
 ├── skills/{pg,pgf,pgxf}# vendored — AI-runtime driving engines (self-contained)
 ├── schemas/            # 7 contracts (channel/threat/defense/ledger/loop-state + v1.4: sample/role-registry)
 ├── seed/               # seed corpus (channels/threats/defenses + v1.4: sample-suite/role-registry examples)
-├── docs/               # ARCHITECTURE · SELF-DEFENSE · INSTRUCTIONS · RUNBOOK
+├── docs/               # TECHNICAL-GUIDE · TOOLS-CATALOG · ARCHITECTURE · SELF-DEFENSE · INSTRUCTIONS · RUNBOOK
 ├── examples/           # sample state
-└── tests/              # deterministic unittest
+└── tests/              # deterministic unittest (232)
 ```
 
 ## See more
 **Start here:** `docs/TECHNICAL-GUIDE.md` (complete standalone technical reference — understand & operate SISAI from one doc). ·
+`docs/TOOLS-CATALOG.md` (the B0–B2 detection/evidence PoC fleet built on the backbone) ·
+`HANDOFF.md` (what shipped beyond the backbone + honest gaps + next work) ·
 `RUNBOOK.md` (all-feature invocation) · `docs/ARCHITECTURE.md` (3 strands ↔ implementation) ·
 `docs/SELF-DEFENSE.md` (SISAI self-defense) · `docs/INSTRUCTIONS-sisai-cycle.md` (one autonomous turn reading docs only).
 
