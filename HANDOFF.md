@@ -43,16 +43,23 @@ decision and never feeds back before verification + human approval.
   `_workspace/cm_test` sandbox; the contract is documented (calibration/ canonical; sandbox
   non-authoritative; holdout independence is structural + label-level).
 - **Holdout independence protocol** (`calibration/independence.py`, `calibration/curation-provenance.json`):
-  measures/gates independence **honestly** — factual (curator ≠ rule author) + `roles_disjoint`. Records
-  the true current state: all 7 shipped detector categories are `single_author` (surfaced, not hidden).
+  measures/gates independence **honestly** — factual (curator ≠ rule author) + `roles_disjoint`.
   `require_independent()` gates real independence; an EXAMPLE entry demonstrates the path.
+- **Independent validation — EXECUTED** (`calibration/independent_eval.py`, `seed/independent-holdouts/`,
+  `docs/INDEPENDENT-VALIDATION-RESULTS.md`): seven runtimes (grok-4.3, antigravity, deepseek, kimi, qwen,
+  codex, claude-sonnet-4.6), each distinct from the rule author and blind to the rules, curated a frozen
+  holdout per category. Re-grading the detectors on them: **0 / 7 cleared** — recall collapses to
+  0.17–0.33 (config-tampering 0.0) vs 1.0 on the single-author holdouts. The single-author gate vastly
+  overstated quality. Rules were **NOT** hardened to these (no teach-to-the-test); the seven are now a
+  frozen independent benchmark.
 
 ## Honest gaps (what code alone can't close)
 
-- **Independent curation**: shipped fixtures are single-author (the meta-layer authored both rule and
-  holdout). A passing gate proves internal consistency + paraphrase robustness, not independent
-  validation. The protocol + gate to record/accept real independence now exist; executing it needs a
-  **distinct curator/judge** (another runtime or human).
+- **Detector generalization (now MEASURED, 0/7 independent)**: under independent cross-model curation the
+  keyword detectors miss most real-world phrasing (recall 0.17–0.33). The single-author gates were not
+  predictive. Closing this needs *semantic* detection (the meta-layer doing detection with the
+  deterministic core as the gate, per SISAI's design), validated on FRESH independent rounds — not more
+  keyword patches, and never by training on the frozen independent benchmark.
 - **Real labeled domain data**: B2 (fraud/AML, trust&safety, pharmacovigilance, RegTech) runs on
   synthetic fixtures; production needs real labeled data + domain SME + regulatory review.
 - **Live fetcher / channel scanner**: collection/external search is the AI meta-layer's job, simulated
@@ -60,10 +67,10 @@ decision and never feeds back before verification + human approval.
 
 ## Next
 
-- **(a) Independent-curation execution protocol** — drive a *distinct* runtime/agent as holdout
-  curator/judge, score submissions with `calibration/battery.py`, and flip `curation-provenance`
-  `independent` only when `roles_disjoint` + factual independence both hold. Turns the single-author
-  gap from "measured" into "executed".
+- **Semantic detection** — the 0/7 result shows keyword bundles don't generalize. The principled fix is
+  meta-layer (AI) detection over the deterministic core gate, re-validated on FRESH independent rounds.
+- **Second independent round** — after any detector improvement, request NEW curator submissions (never
+  reuse `seed/independent-holdouts/`) and re-run `calibration/independent_eval.py --verify`.
 - Real-data onboarding for B2 (gated: SME + regulatory), and a live fetcher interface for collection.
 
 ## Branches

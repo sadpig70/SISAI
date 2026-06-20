@@ -1,0 +1,62 @@
+{
+  "category": "pharmacovigilance",
+  "curator_model": "claude-sonnet-4.6",
+  "provenance": {
+    "blind_to_rules": true,
+    "note": "curated independently of SISAI detector rules"
+  },
+  "rows": [
+    {
+      "label": "malicious",
+      "text": "Fatal outcome reported; patient died on Day 2 of therapy; cause of death: acute respiratory failure; reporter suspects drug causation."
+    },
+    {
+      "label": "malicious",
+      "text": "Admitted to ICU following dose 3; severe arrhythmia requiring cardioversion twice; discharge delayed 10 days; outcome: recovered with sequelae."
+    },
+    {
+      "label": "malicious",
+      "text": "Case: 58F developed aplastic anemia 2 weeks post-initiation; BM biopsy confirmed; required hospitalization and transfusion support for 3 weeks."
+    },
+    {
+      "label": "malicious",
+      "text": "Pt. found unresponsive at 0320; code called; ROSC after 12 min; transferred to CICU; suspected drug-induced QT prolongation per cardiologist."
+    },
+    {
+      "label": "malicious",
+      "text": "Patient presented to ED with hepatic encephalopathy; ALT >10x ULN; biopsy shows drug-induced hepatocellular injury; placed on transplant waitlist."
+    },
+    {
+      "label": "malicious",
+      "text": "Neonatal death within 48h of delivery; mother received study drug during 3rd trimester; no other perinatal risk factors documented by neonatology."
+    },
+    {
+      "label": "malicious",
+      "text": "Signal: drug X — hemorrhagic stroke — ROR 4.2 [2.1–8.4]; 6 deaths and 4 hospitalizations confirmed in FAERS spontaneous report database."
+    },
+    {
+      "label": "benign",
+      "text": "No deaths or hospitalizations were attributable to the study drug over 2 years; all serious events were adjudicated as unrelated by the DSMB."
+    },
+    {
+      "label": "benign",
+      "text": "This pharmacovigilance plan mandates reporting of any potential drug-related death within 7 calendar days; late submissions are prohibited."
+    },
+    {
+      "label": "benign",
+      "text": "Participant reported mild dizziness on Day 1 that resolved within 4 hours; assessed as non-serious and unrelated by the investigator; no action taken."
+    },
+    {
+      "label": "benign",
+      "text": "Historical signal for nephrotoxicity was not replicated in the current formulation; renal function remained within normal limits for all 400 participants."
+    },
+    {
+      "label": "benign",
+      "text": "Grade 1 adverse events include mild nausea or fatigue that do not require medical intervention and resolve without sequelae; not subject to expedited reporting."
+    },
+    {
+      "label": "benign",
+      "text": "FDA guidance requires sponsors not to minimize serious adverse events in narratives; any attempt to do so constitutes a regulatory violation subject to enforcement."
+    }
+  ]
+}
