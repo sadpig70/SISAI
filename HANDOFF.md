@@ -53,13 +53,20 @@ decision and never feeds back before verification + human approval.
   overstated quality. Rules were **NOT** hardened to these (no teach-to-the-test); the seven are now a
   frozen independent benchmark.
 
+- **Independent validation Phase 2 — EXECUTED, 7/7 hybrid-independent** (`calibration/semantic_ingest.py`,
+  `seed/independent-holdouts/semantic/`): seven semantic judges (kimi, deepseek, claude-sonnet-4.6,
+  codex, antigravity, grok-4.3, qwen — each 3-way distinct from author and curator, blind) classified
+  every holdout row by meaning and agreed with the curators' labels **100%**. Injected as the hybrid's
+  semantic layer, recall went 0.17–0.33 → **1.0 / precision 1.0 / FP 0** on all 7. Semantic detection
+  generalizes; keyword does not. (docs/INDEPENDENT-VALIDATION-RESULTS.md, Phase 2.)
+
 ## Honest gaps (what code alone can't close)
 
-- **Detector generalization (now MEASURED, 0/7 independent)**: under independent cross-model curation the
-  keyword detectors miss most real-world phrasing (recall 0.17–0.33). The single-author gates were not
-  predictive. Closing this needs *semantic* detection (the meta-layer doing detection with the
-  deterministic core as the gate, per SISAI's design), validated on FRESH independent rounds — not more
-  keyword patches, and never by training on the frozen independent benchmark.
+- **The pass is the AI semantic layer, not the keyword rules**: keyword detectors remain 0/7
+  independent; the 7/7 is driven by the injected meta-layer/AI semantic judgment. Productionizing means
+  detection via meta-layer semantic cognition over the deterministic gate (SISAI's design), re-validated
+  each round with a distinct curator + judge. Ground truth is one curator's labels per category; the
+  judges' 100% match is strong two-model concordance, not an absolute oracle.
 - **Real labeled domain data**: B2 (fraud/AML, trust&safety, pharmacovigilance, RegTech) runs on
   synthetic fixtures; production needs real labeled data + domain SME + regulatory review.
 - **Live fetcher / channel scanner**: collection/external search is the AI meta-layer's job, simulated

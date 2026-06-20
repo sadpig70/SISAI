@@ -85,10 +85,14 @@ class TestIngestAndHybrid(unittest.TestCase):
         self.assertEqual(self._ingest(_judge_submission("grok-4.3"))["status"], "rejected")
 
 
-class TestRealInboxEmpty(unittest.TestCase):
-    def test_no_semantic_judges_yet(self):
-        # the committed semantic inbox is empty; no category is hybrid-independent yet
-        self.assertEqual(si.report()["independent_total"], 0)
+class TestSemanticBenchmark(unittest.TestCase):
+    def test_seven_judges_all_hybrid_independent(self):
+        # 7 external semantic judges (each 3-way distinct, blind) agreed with the curator labels 100%;
+        # hybrid (keyword + semantic) clears all 7 where keyword alone scored 0.17-0.33.
+        # (docs/INDEPENDENT-VALIDATION-RESULTS.md, Phase 2)
+        rep = si.report()
+        self.assertEqual(rep["judged_total"], 7)
+        self.assertEqual(rep["independent_total"], 7)
 
 
 class TestCli(unittest.TestCase):
