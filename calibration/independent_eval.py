@@ -85,6 +85,11 @@ def ingest(path: str) -> dict:
     problems = validate_submission(sub)
     if problems:
         return {"status": "rejected", "problems": problems[:6]}
+    from calibration.rounds import is_stale                              # freshness: no teach-to-benchmark
+    prev = load_independent_holdout(sub["category"])
+    if prev and is_stale({r.get("text") for r in sub["rows"]}, {r.get("text") for r in prev["rows"]}):
+        return {"status": "rejected", "problems": ["stale: identical to the stored frozen holdout — "
+                "a new round needs fresh rows (no teach-to-the-benchmark)"]}
     os.makedirs(INDEP_DIR, exist_ok=True)
     dest = os.path.join(INDEP_DIR, f"{sub['category']}.json")
     atomic_write_json(dest, sub)
