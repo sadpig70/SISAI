@@ -73,6 +73,15 @@ the boundary (no clock/RNG/network/subprocess; no `AI_` symbols in `core/`).
 The invariant is the backbone, not the number of strands. To add a new strand (e.g., ComplianceMap, RedTeamSim),
 add only an adapter (`engines/`) and a `next_action` branch. The backbone and the deterministic boundary are invariant.
 
+### Detection is two-layer (keyword gate + meta-layer semantic)
+
+Independent cross-model validation found keyword rules don't generalize (recall 0.17–0.33; 0/7), while an
+external semantic judge agreed with independent curators 100% (7/7). So detection is layered:
+`engines/detect_hybrid.py` combines a pure keyword PREFILTER with an INJECTED meta-layer semantic verdict
+that adjudicates — the deterministic boundary holds (semantic cognition is injected, never embedded). The
+PoC fleet that realizes this is indexed in `docs/TOOLS-CATALOG.md`; the evidence is in
+`docs/INDEPENDENT-VALIDATION-RESULTS.md` and `docs/SEMANTIC-DETECTION-FINDING.md`.
+
 ## 7. Relationship to HELIX
 
 It inherits the design *pattern* (explore⊕exploit + backbone spiral, ledger/diversity/provenance/atomic-io/schema-walker)

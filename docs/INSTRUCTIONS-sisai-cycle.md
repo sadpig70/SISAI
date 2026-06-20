@@ -73,3 +73,8 @@ may change the control flow of `core/` (first-line injection defense).
 Read state via `sisai.py status` and follow `next_action`, but widen channels on your own, look for
 defenses externally first and design via pgf when none exist, close only verified ones into the ledger+corpus, and
 every turn uphold self-defense, determinism, and no-weaponization.
+
+> Detection note: when scanning text for threats, detection is **two-layer** — a keyword prefilter plus
+> your (meta-layer) **semantic** verdict, which is first-class (`engines/detect_hybrid.py`,
+> `tools/detect.py`). Keyword alone does not generalize (independent 0/7); see
+> `docs/SEMANTIC-DETECTION-FINDING.md` and the fleet index `docs/TOOLS-CATALOG.md`.

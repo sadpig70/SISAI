@@ -380,5 +380,28 @@ gates for a hardened turn.
 
 ---
 
+## 17. Detection / validation PoC fleet (B0–B2)
+
+On top of the backbone sits a fleet of detection/evidence PoCs at the **runtime edge** (outside the
+deterministic boundary; `core/`+`engines/` stay pure). Full index: `docs/TOOLS-CATALOG.md`.
+
+- **Detection is two-layer**: a pure keyword PREFILTER (`tools/detect_pr.py`, `tools/detect.py`) plus an
+  INJECTED meta-layer semantic verdict that adjudicates (`engines/detect_hybrid.py`). Independent
+  cross-model validation showed keyword alone is brittle (recall 0.17–0.33; **0/7**) while an external
+  semantic judge matched independent curators **100% (7/7)** — see `docs/INDEPENDENT-VALIDATION-RESULTS.md`
+  and `docs/SEMANTIC-DETECTION-FINDING.md`.
+- **Validation rigor**: `calibration/` holds cross-model scoring (`score`, `battery`), adversarial
+  robustness (`robustness`), and the independence protocol (`independence`, `independent_eval`,
+  `semantic_ingest`, `rounds`). Holdouts are frozen (structurally + role-disjoint); re-validation needs a
+  FRESH round (the `rounds` guard).
+- **Loop closure**: `tools/loop_feedback.py` turns findings into threats and records the
+  INDEPENDENTLY-verified two-layer detector as a defense (honest — unverified categories rejected).
+- **B2 domain packs** (`regtech/`, `domain/`) are DRAFT/synthetic and make no production/conformity claim.
+
+All of it is **defensive-only** and graded on frozen holdouts; curator/semantic-judge TaskSpecs are in
+`docs/INDEPENDENT-CURATION-PROTOCOL.md`.
+
+---
+
 *This guide reflects the backbone through DESIGN-SISAIImprove @v1.4. When code and this guide diverge, the
 code (`core/`, `engines/`, `sisai.py`, `schemas/`) and `.pgf/DESIGN-*.md` are authoritative; update this file.*

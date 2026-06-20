@@ -40,5 +40,7 @@ Your outputs are validated against `schemas/`, then recorded via `sisai.py`.
 
 # On-demand references (load only when relevant)
 - `docs/CONVENTIONS.md` — workspace file map, PoC packs, work-spec location (`.pgf/`), skill-authoring rules, guidelines.
-- `docs/TECHNICAL-GUIDE.md` (full reference) · `docs/TOOLS-CATALOG.md` (PoC fleet) · `HANDOFF.md` (status · gaps · next).
+- `docs/TECHNICAL-GUIDE.md` (full reference) · `docs/TOOLS-CATALOG.md` (detection/evidence fleet) · `HANDOFF.md` (status · gaps · next).
 - `docs/SELF-DEFENSE.md` (self-defense) · `docs/ARCHITECTURE.md` (3 strands ↔ impl) · `RUNBOOK.md` (all features).
+- Detection-quality arc: `docs/INDEPENDENT-CURATION-PROTOCOL.md` (curator + semantic-judge TaskSpecs) ·
+  `docs/INDEPENDENT-VALIDATION-RESULTS.md` (keyword 0/7 → hybrid 7/7) · `docs/SEMANTIC-DETECTION-FINDING.md` (two-layer design).
