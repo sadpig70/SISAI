@@ -23,6 +23,7 @@ and **independent of HELIX and global settings**.
 - skills folder: `skills/` (vendored: `pg`, `pgf`, `pgxf` — AI-runtime driving engines, parser-free)
 - backbone (deterministic stdlib): `core/` (fingerprint·channels·ledger·triage·provenance·loop·io·schema·validate · v1.4: detect·verify)
 - adapters/engines: `engines/adapters.py` · `engines/adversarial.py` (v1.4 red/blue loop, injected cognition) · driver: `sisai.py` · contracts: `schemas/` (7) · seed: `seed/`
+- PoC packs (backlog B0–B2, **edge — outside the determinism boundary**): `tools/` (8 detection/evidence CLIs), `labs/` (education), `calibration/` (cross-model scoring + adversarial robustness), `regtech/`·`domain/` (B2 domain, **DRAFT/synthetic**). Index: `docs/TOOLS-CATALOG.md`.
 - runtime artifacts: `.sisai/` (channels.json·ledger.json·corpus.json — gitignore). Falls back to `seed/` if absent.
 - docs: `docs/` (TECHNICAL-GUIDE [complete standalone reference]·ARCHITECTURE·SELF-DEFENSE·INSTRUCTIONS-sisai-cycle·RUNBOOK), `README.md`.
 
