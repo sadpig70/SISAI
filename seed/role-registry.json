@@ -14,6 +14,13 @@
       "author_model": "ts-author-model",
       "holdout_curator_model": "ts-curator-model",
       "judge_model": "ts-judge-model"
+    },
+    {
+      "suite": "EXAMPLE-independent",
+      "category": "EXAMPLE-independent",
+      "author_model": "author-model-A",
+      "holdout_curator_model": "curator-model-B",
+      "judge_model": "judge-model-C"
     }
   ]
 }
