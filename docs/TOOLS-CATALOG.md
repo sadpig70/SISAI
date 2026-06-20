@@ -55,6 +55,7 @@ backlog: **now (B0)** → **near (B1)** → **domain (B2, DRAFT/synthetic)**.
 | `calibration/rounds.py` | Round freshness: re-validation must use a FRESH holdout; `independent_eval.ingest` rejects a stale (identical) re-submission (no teach-to-the-benchmark) | `--check <new> --against <existing>` |
 | `engines/detect_hybrid.py` | Two-layer detection combiner: keyword prefilter + injected semantic layer (semantic adjudicates, keyword audited) | (library) |
 | `tools/detect.py` | Unified detection entry across all detectors: keyword prefilter + injected meta-layer semantic verdict; emits `semantic_recommended` escalation when none supplied | `--text/--file [--category]` |
+| `tools/loop_feedback.py` | Close the spiral: findings→threats, and the INDEPENDENTLY-verified two-layer detector→defense corpus (honest — unverified categories rejected). `--plan` dry-run, `--commit` records | `--plan / --commit / --findings` |
 
 ## Invariants (every tool)
 
